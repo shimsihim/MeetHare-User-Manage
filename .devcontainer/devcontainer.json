@@ -1,0 +1,25 @@
+// devcontainer.json의 메타데이터는 다음 링크를 확인: https://aka.ms/devcontainer.json
+{
+  // dev container의 컨테이너 이름 설정
+  "name": "Spring-Boot Dev Env",
+  // 사용할 Docker 이미지 또는 Docker-Compose 파일을 지정하기. 자세한 건 다음 링크를 확인: https://containers.dev/guide/dockerfile
+  "image": "openjdk:11",
+
+  // 간편하게 제공되는 애드온 기능들을 추가하기. 자세한 건 다음 링크를 확인: https://containers.dev/features.
+  // 단, Github Personal Token이 없으면 동작하지 않는 것으로 확인
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  // 로컬 환경으로 연결할 포트 명시하기. Docker run의 -p 옵션과 동일
+  "forwardPorts": [8080],
+
+  // IDE 별 설정 값을 지정하기.
+  "customizations": {
+    // 우리는 VSCode에서의 설정 값을 수정
+    "vscode": {
+      // Extensions에서 원하는 Extension 클릭 후, 톱니바퀴 버튼을 눌러 Extension ID 값 복붙
+      "extensions": ["vscjava.vscode-java-pack", "vmware.vscode-boot-dev-pack"]
+    }
+  }
+}
