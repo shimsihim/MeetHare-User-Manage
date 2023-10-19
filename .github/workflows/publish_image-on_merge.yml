@@ -4,8 +4,8 @@ name: Publish Image on Docker Hub
 # Action의 Trigger 설정
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
 
 # 직렬 또는 병렬적으로 실행할 작업의 집합
 jobs:
@@ -44,8 +44,10 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
 
-      - name: Set env
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/v}" >> $GITHUB_ENV
+      # Release 브랜치 이름에서 버전 정보 추출
+      - name: 버전 정보 추출
+        run: echo "##[set-output name=version;]$(echo '${{ github.event.head_commit.message }}' | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')"
+        id: extract_version_name
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -65,6 +67,6 @@ jobs:
           # platforms: linux/amd64
           tags: |
             tprogramer/my-container-test:latest
-            tprogramer/my-container-test:${{ env.RELEASE_VERSION }}
+            tprogramer/my-container-test:${{ steps.extract_version_name.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
