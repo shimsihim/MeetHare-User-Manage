@@ -1,0 +1,63 @@
+spring:
+  config:
+    import:
+      - classpath:application-oauth.yml
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/meethare?serverTimezone=UTC&characterEncoding=UTF-8
+    username: ssafy
+    password: ssafy
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    open-in-view: true # 웹 요청이 완료될 때까지 동일한 EntityManager를 갖도록 하는 설정이지만, 성능과 확장성 면에서 떨어짐 (기본값)
+    hibernate:
+      ddl-auto: update # 어플리케이션 실행 시, DB 테이블 자동생성 방식
+      # create : 애플리케이션 실행 시 테이블을 모두 제거하고 다시 생성 (drop & create)
+      # create-drop : 애플리케이션 실행 시 테이블을 모두 제거하고 다시 생성하며, 애플리케이션 종료 시점에 테이블을 모두 제거 (drop & create & drop)
+      # update : 애플리케이션 실행 시 변경점만 반영
+      # validate : 현재 테이블 정보가 entity에 정의된 내용과 동일한지 체크 후, 다를 경우 경고를 출력하며 애플리케이션을 실행하지 않음
+      # none : 자동생성을 사용하지 않음
+    properties:
+      hibernate:
+        diarect: org.hibernate.dialect.MySQL5InnoDBDialect # 작성할 쿼리의 기준 DB 엔진 설정
+        format_sql: true # 쿼리 포맷팅
+        use_sql_comments: true # SQL 쿼리에 주석으로 추가정보 제공
+
+jwt:
+  # 다음 명령어를 터미널에서 실행하여 생성할 수 있음 : `openssl rand -hex 64`
+  secretKey: "669629e79bec9fdc11391e28bb7232c80660499499add816f4ae3ff1a5c10a1aa4fffa0b725957934271e1c54a061e2f2956ebba3727aa7aa7a3fee8c6480a97" # Base64로 인코딩된 암호 키, HS512를 사용할 것이기 때문에, 64바이트 이상이 되어야 함
+  access:
+#    expiration: 3600000 # 1ms 기준, 보편적으로 1시간 부여
+    expiration: 1209600000 # test용으로 2주 부여
+    header: Authorization
+  refresh:
+    expiration: 1209600000 #  1ms 기준, 보편적으로 2주 부여
+    header: Authorization-refresh
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql: trace # 쿼리의 ?에 어떤 값이 들어가는지 TRACE Log에 값을 보여주는 설정
+
+springdoc:
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  api-docs:
+    groups:
+      enabled: true # API 명세 그룹화
+  swagger-ui:
+    operations-sorter: alpha # 정렬 방식
+    # alpha (알파벳 오름차순)
+    # method (HTTP메소드순)
+    tags-sorter: alpha # 태그 정렬 기준
+    path: /swagger-ui.html # Swagger 문서 접속 경로
+    disable-swagger-default-url: true
+    display-query-params-without-oauth2: true
+    doc-expansion: none # tag와 operation 펼치는 방식
+  paths-to-match:
+    - /** # 일치하는 경로의 API만 제공
