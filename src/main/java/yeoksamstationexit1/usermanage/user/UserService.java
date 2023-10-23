@@ -2,10 +2,14 @@ package yeoksamstationexit1.usermanage.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import yeoksamstationexit1.usermanage.user.dto.dayCalendarDTO;
+import yeoksamstationexit1.usermanage.user.entity.FixCalendarEntity;
+import yeoksamstationexit1.usermanage.user.repository.FixCalendarRepository;
 
 import java.util.List;
 
@@ -16,6 +20,7 @@ import java.util.List;
 public class UserService {
 
   private final UserRepository userRepository;
+  private final FixCalendarRepository fixCalendarRepository;
   private final PasswordEncoder passwordEncoder;
 
   /**
@@ -24,7 +29,7 @@ public class UserService {
    * Entity인 Model 객체에 @Id로 설정한 키 값이 없을 경우 해당하는 데이터를 추가
    * 만약 추가하려는 Entity인 Model 객체에 @Id 값이 이미 존재하면 갱신되기 때문에
    * 아래와 같이 추가하고자 하는 User가 존재하는지 체크하는 로직을 추가
-   * 
+   *
    * @param model
    * @return
    */
@@ -39,11 +44,11 @@ public class UserService {
     }
 
     UserEntity user = UserEntity.builder()
-        .email(userSignUpDto.getEmail())
-        .password(userSignUpDto.getPassword())
-        .nickname(userSignUpDto.getNickname())
-        .role(Role.USER)
-        .build();
+            .email(userSignUpDto.getEmail())
+            .password(userSignUpDto.getPassword())
+            .nickname(userSignUpDto.getNickname())
+            .role(Role.USER)
+            .build();
 
     user.passwordEncode(passwordEncoder);
     userRepository.save(user);
@@ -91,12 +96,37 @@ public class UserService {
   }
 
 
+  public HttpStatus setCalendar(UserDetails token, dayCalendarDTO daycalendardto) {
+
+
+    try {
+
+
+      UserEntity existUser = getUser(token.getUsername());
+      FixCalendarEntity calendar = new FixCalendarEntity();
+      calendar.setUser(existUser);
+      calendar.setDay(daycalendardto.getDay());
+      calendar.setTime(daycalendardto.getTime());
+
+      fixCalendarRepository.save(calendar);
+
+    }
+    catch (Exception e){
+      log.info("캘린더 저장 실패");
+    }
+
+
+
+
+    return HttpStatus.OK;
+  }
+
 
 
   /**
    * User List 조회
    * JPA Repository의 findAll Method를 사용하여 전체 User를 조회
-   * 
+   *
    * @return
    */
   public List<UserEntity> getUsers() {
@@ -108,7 +138,7 @@ public class UserService {
    * JPA Repository의 findBy Method를 사용하여 특정 User를 조회
    * find 메소드는 NULL 값일 수도 있으므로 Optional<T>를 반환하지만,
    * Optional 객체의 get() 메소드를 통해 Entity로 변환해서 반환함.
-   * 
+   *
    * @param id
    * @return
    */
@@ -120,7 +150,7 @@ public class UserService {
   /**
    * Id에 해당하는 User 삭제
    * JPA Repository의 deleteBy Method를 사용하여 특정 User를 삭제
-   * 
+   *
    * @param id
    */
   public void deleteUser(String id) {

@@ -9,6 +9,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
+import yeoksamstationexit1.usermanage.user.dto.dayCalendarDTO;
 
 import java.text.ParseException;
 import java.util.List;
@@ -63,6 +64,19 @@ public class UserController {
 
 
 
+    @Operation(description = "유저 고정일정 등록 메서드.")
+    @PostMapping("/fixcalendar")
+    public ResponseEntity<Void> setFixCalendar(@AuthenticationPrincipal UserDetails token,
+                                               @RequestBody dayCalendarDTO daycalendardto) throws ParseException {
+
+        System.out.println(daycalendardto.toString());
+        HttpStatus status = userService.setCalendar(token, daycalendardto);
+
+
+
+        return new ResponseEntity<>(status);
+
+    }
 
     /**
      * Member List 조회
