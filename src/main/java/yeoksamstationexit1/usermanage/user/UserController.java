@@ -22,10 +22,6 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/jwt-test")
-    public String jwtTest() {
-        return "jwtTest 요청 성공";
-    }
 
     /**
      * Member 생성
@@ -64,19 +60,19 @@ public class UserController {
 
 
 
-    @Operation(description = "유저 고정일정 등록 메서드.")
-    @PostMapping("/fixcalendar")
-    public ResponseEntity<Void> setFixCalendar(@AuthenticationPrincipal UserDetails token,
-                                               @RequestBody dayCalendarDTO daycalendardto) throws ParseException {
-
-        System.out.println(daycalendardto.toString());
-        HttpStatus status = userService.setCalendar(token, daycalendardto);
-
-
-
-        return new ResponseEntity<>(status);
-
-    }
+//    @Operation(description = "유저 고정일정 등록 메서드.")
+//    @PostMapping("/fixcalendar")
+//    public ResponseEntity<Void> setFixCalendar(@AuthenticationPrincipal UserDetails token,
+//                                               @RequestBody dayCalendarDTO daycalendardto) throws ParseException {
+//
+//        System.out.println(daycalendardto.toString());
+//        HttpStatus status = userService.setCalendar(token, daycalendardto);
+//
+//
+//
+//        return new ResponseEntity<>(status);
+//
+//    }
 
     /**
      * Member List 조회

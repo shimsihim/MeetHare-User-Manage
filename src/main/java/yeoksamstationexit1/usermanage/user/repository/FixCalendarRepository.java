@@ -1,20 +1,22 @@
 package yeoksamstationexit1.usermanage.user.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import yeoksamstationexit1.usermanage.user.dayType;
 import yeoksamstationexit1.usermanage.user.entity.FixCalendarEntity;
-import yeoksamstationexit1.usermanage.user.entity.FixCalendarId;
 
+import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-public interface FixCalendarRepository  extends JpaRepository<FixCalendarEntity, FixCalendarId> {
+public interface FixCalendarRepository  extends JpaRepository<FixCalendarEntity, Long> {
 
     // 사용자 ID를 기반으로 캘린더 조회
-    Optional<List<FixCalendarEntity>> findByUserId(Long userId);
+    @Query("SELECT timelist FROM FixCalendarEntity timelist WHERE timelist.id.userId = :userId ORDER BY timelist.id.impossibleDate ASC")
+    Optional<List<FixCalendarEntity>> findByIdUserIdOrderByImpossibleDateAsc(Long userId);
 
-    // 사용자 ID 및 요일을 기반으로 캘린더 조회
-    Optional<List<FixCalendarEntity>> findByUserIdAndDay(Long userId, dayType daytype);
-
+    @Query("SELECT DISTINCT fc.id.impossibleDate FROM FixCalendarEntity fc WHERE fc.id.userId IN :userIds")
+    List<LocalDate> findByUserList(List<Long> userIds);
 
 }

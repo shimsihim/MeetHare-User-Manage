@@ -34,6 +34,14 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-ui:1.6.9'
 
 
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+
+	// localdate타입을 jackson이 이해할 수 있도록
+	implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.14.2'
+
+
+
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'

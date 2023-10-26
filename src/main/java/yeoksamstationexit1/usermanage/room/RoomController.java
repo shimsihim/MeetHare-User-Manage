@@ -4,12 +4,17 @@ package yeoksamstationexit1.usermanage.room;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.CreateRoomDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.RoomIdDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.addDeleteDayListDTO;
+
+import javax.validation.Valid;
 
 @RequiredArgsConstructor
 @RequestMapping("api/room")
@@ -18,15 +23,65 @@ import org.springframework.web.bind.annotation.RestController;
 public class RoomController {
 
     private final RoomService roomService;
+    private final RoomGetInService roomGetInService;
 
-    @Operation(description = "방 등록 메서드입니다.")
+
+    @Operation(description = "방 등록 메서드입니다.") // 방장이 기간을 설정한 방을 만든 후 생성된 roomId반환
     @PostMapping()
-    public ResponseEntity<String> createRoom(@AuthenticationPrincipal UserDetails token) throws Exception {
+    public ResponseEntity<Long> createRoom(@AuthenticationPrincipal UserDetails token , @RequestBody CreateRoomDTO createRoomDTO) throws Exception {
 
-        roomService.registRoom(token);
+        Long roomId = roomService.registRoom(token,createRoomDTO);
 
-        return ResponseEntity.ok("회원가입 성공!");
+        return ResponseEntity.ok(roomId);
     }
+
+
+    //기존 방에 입장한 인원이면 방에 입장한 인원정보와 roomId 반환
+    // 처음 입장 시 participant등록 후 본인의 기간 내의 불가능한 날짜 반환. -> 프론트에서 다시 방의 기간 내에 불가능한 시간 받기
+    @GetMapping("/enter/{roomId}")
+    public ResponseEntity<?> enterRoom(@AuthenticationPrincipal UserDetails token,@PathVariable(value = "roomId") Long roomId) throws Exception {
+        if(token == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("로그인이 필요합니다");
+        }
+        ResponseEntity<?> status  =  roomGetInService.getIn(token,roomId);
+
+        return status;
+    }
+
+    @PostMapping("/submittime") // 본인 불가능한 날짜 제출
+    public ResponseEntity<String> submitMyImpossibleTime(@AuthenticationPrincipal UserDetails token, @RequestBody addDeleteDayListDTO dayList){
+        //개인의 특정 방의 출발지 변경
+        ResponseEntity<String> response = roomService.updateMyImpossibleTime(token, dayList);
+
+        return response;
+    }
+
+
+
+    @PostMapping("/changestartpoint") // 해당 약속의 출발지점 수정
+    public ResponseEntity<String> changeSpecificStartPoint(@AuthenticationPrincipal UserDetails token,@Valid @RequestBody ChangeLocalStartRequestDTO changeLocalStartRequestDTO){
+        //개인의 특정 방의 출발지 변경
+        ResponseEntity<String> response = roomService.changeLocalStartPoint(token, changeLocalStartRequestDTO);
+
+        return response;
+    }
+
+
+    //강제로 다음으로 넘어가는 것
+    //테스트 완료
+    //최적화 미완료X
+    @PostMapping("/nextforce") // 해당 약속의 강제 다음
+    public ResponseEntity<?> nextForce(@AuthenticationPrincipal UserDetails token,@RequestBody RoomIdDTO roomIdDTO){
+        System.out.println(roomIdDTO.getRoomId());
+        //개인의 특정 방의 출발지 변경
+        ResponseEntity<?> response = roomService.nextClick(roomIdDTO.getRoomId());
+
+        return response;
+    }
+
+
+
+
 
 
 }
