@@ -3,6 +3,7 @@ spring:
     import:
       - classpath:application-oauth.yml
 
+
   datasource:
     url: jdbc:mysql://localhost:3306/meethare?serverTimezone=UTC&characterEncoding=UTF-8
     username: ssafy

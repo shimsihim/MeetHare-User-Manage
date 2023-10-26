@@ -8,8 +8,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yeoksamstationexit1.usermanage.user.dto.dayCalendarDTO;
-import yeoksamstationexit1.usermanage.user.entity.FixCalendarEntity;
-import yeoksamstationexit1.usermanage.user.repository.FixCalendarRepository;
+//import yeoksamstationexit1.usermanage.user.entity.FixCalendarEntity;
+//import yeoksamstationexit1.usermanage.user.repository.FixCalendarRepository;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ import java.util.List;
 public class UserService {
 
   private final UserRepository userRepository;
-  private final FixCalendarRepository fixCalendarRepository;
+//  private final FixCalendarRepository fixCalendarRepository;
   private final PasswordEncoder passwordEncoder;
 
   /**
@@ -96,30 +96,30 @@ public class UserService {
   }
 
 
-  public HttpStatus setCalendar(UserDetails token, dayCalendarDTO daycalendardto) {
-
-
-    try {
-
-
-      UserEntity existUser = getUser(token.getUsername());
-      FixCalendarEntity calendar = new FixCalendarEntity();
-      calendar.setUser(existUser);
-      calendar.setDay(daycalendardto.getDay());
-      calendar.setTime(daycalendardto.getTime());
-
-      fixCalendarRepository.save(calendar);
-
-    }
-    catch (Exception e){
-      log.info("캘린더 저장 실패");
-    }
-
-
-
-
-    return HttpStatus.OK;
-  }
+//  public HttpStatus setCalendar(UserDetails token, dayCalendarDTO daycalendardto) {
+//
+//
+//    try {
+//
+//
+//      UserEntity existUser = getUser(token.getUsername());
+//      FixCalendarEntity calendar = new FixCalendarEntity();
+//      calendar.setUser(existUser);
+//      calendar.setDay(daycalendardto.getDay());
+//      calendar.setTime(daycalendardto.getTime());
+//
+//      fixCalendarRepository.save(calendar);
+//
+//    }
+//    catch (Exception e){
+//      log.info("캘린더 저장 실패");
+//    }
+//
+//
+//
+//
+//    return HttpStatus.OK;
+//  }
 
 
 
