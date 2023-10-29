@@ -1,4 +1,4 @@
-package yeoksamstationexit1.usermanage.room.roomDTO;
+package yeoksamstationexit1.usermanage.room.roomDTO.request;
 
 import lombok.Data;
 import lombok.ToString;

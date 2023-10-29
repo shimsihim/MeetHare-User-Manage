@@ -13,20 +13,15 @@ import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEmbededId;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEntity;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantRepository;
+import yeoksamstationexit1.usermanage.room.roomDTO.response.ReturnRoomDTO;
 import yeoksamstationexit1.usermanage.user.UserEntity;
 import yeoksamstationexit1.usermanage.user.UserRepository;
 import yeoksamstationexit1.usermanage.user.entity.FixCalendarEntity;
 import yeoksamstationexit1.usermanage.user.repository.FixCalendarRepository;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -43,6 +38,7 @@ public class RoomGetInService {
     //일단 방의 진행도를 보고 insubmission상태가 아니면 다시 보내기
     public ResponseEntity<?> getIn(UserDetails token, Long roomId) {
 
+
         /** To do
          * 조인을 통해서 repository의 접근 줄이기
          * InSubmissiondl 이 아니면 굳이 나눌 필요 없이 일단 다 보내주고
@@ -58,17 +54,39 @@ public class RoomGetInService {
 
         //방의 참가자 목록 받기
         List<ParticipantEntity> memberList = participantRepository.findByIdRoomId(roomId).get();
+        List<ReturnRoomDTO> returnRoomDTOList = memberList.stream()
+                .map(participantEntity -> {
+                    ReturnRoomDTO returnRoomDTO = new ReturnRoomDTO();
+                    returnRoomDTO.setNickname(participantEntity.getUser().getNickname());
+                    returnRoomDTO.setPersonalProgress(participantEntity.getProgress());
+                    returnRoomDTO.setRoomName(participantEntity.getRoomName());
+                    return returnRoomDTO;
+                })
+                .collect(Collectors.toList());
 
         //해당 방의 유저의 해당 방정보 가져오기
         UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), roomId);
-        ParticipantEntity participantEntity = participantRepository.findById(id).get();
-
+        Optional<ParticipantEntity> participantOp = participantRepository.findById(id);
+        ParticipantEntity participantEntity;
+        System.out.println(123123);
+        System.out.println(123123);
+        System.out.println(123123);
         if (roomProgressity == Processivity.InSubmission) {
             //아직 참여하지 않은 경우 참여시키기
-            if (participantEntity == null) {
+            if(participantOp.isEmpty()){
+
                 participantEntity = new ParticipantEntity(id);
+
+                participantEntity.setRoomName(roomEntity.getRoomName());
+                participantEntity.setUser(existUser);
+                participantEntity.setRoom(roomEntity);
                 participantRepository.save(participantEntity);
+            }
+            else{
+                System.out.println("아닐경우");
+                participantEntity = participantOp.get();
+                System.out.println("아닐경우");
             }
 
             //본인 불가능한 시간
@@ -77,12 +95,14 @@ public class RoomGetInService {
             //제출자 수
             //방의 진행도
             //나의 진행도
-
+            System.out.println("여기는 1번째 단계");
+            System.out.println("여기는 1번째 단계");
+            System.out.println("여기는 1번째 단계");
+            System.out.println("여기는 1번째 단계");
             List<FixCalendarEntity> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId());
 
             Map<String, Object> response = new HashMap<>();
-            response.put("memberList", memberList);
-            response.put("roomId", roomId);
+            response.put("memberList", returnRoomDTOList);
             response.put("fixCalendarList", myImpossibleList);
             response.put("roomProgress", roomEntity.getProcessivity());
             response.put("submitNumber", roomEntity.getSubmitNumber());
@@ -93,13 +113,16 @@ public class RoomGetInService {
 
 
             //방이 진행중이면 들어올 수 없음
-            if (participantEntity == null) {
+            if(participantOp.isEmpty()){
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("이미 진행 시작한 방");
+            }
+            else{
+                participantEntity = participantOp.get();
             }
 
 
             Map<String, Object> response = new HashMap<>();
-            response.put("memberList", memberList);
+            response.put("memberList", returnRoomDTOList);
             response.put("roomId", roomId);
             response.put("roomProgress", roomEntity.getProcessivity());
             response.put("submitNumber", roomEntity.getSubmitNumber());
@@ -114,8 +137,8 @@ public class RoomGetInService {
                 //다음으로 넘어가기
 
 
-//                List<FixCalendarEntity> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId());
-//                response.put("fixCalendarList", myImpossibleList);
+                List<FixCalendarEntity> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId());
+                response.put("fixCalendarList", myImpossibleList);
                 response.put("fixDay", roomEntity.getFixDay());
 
             } else if (roomProgressity == Processivity.RecommendStation) {

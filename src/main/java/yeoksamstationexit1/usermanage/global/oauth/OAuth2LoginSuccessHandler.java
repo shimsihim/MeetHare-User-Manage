@@ -9,6 +9,7 @@ import yeoksamstationexit1.usermanage.global.jwt.JwtService;
 import yeoksamstationexit1.usermanage.user.Role;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -34,9 +35,17 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String accessToken = jwtService.createAccessToken(oAuth2User.getEmail());
 
+        Cookie cookie = new Cookie("Bearer", accessToken);
+        cookie.setMaxAge(3600); // 쿠키 유효 기간 (초)
+        cookie.setPath("/");    // 쿠키 경로
+//        cookie.setHttpOnly(true); // HTTP Only 설정 (보안을 위해)
+
+        // 응답 헤더에 쿠키 추가
+        response.addCookie(cookie);
+
         response.addHeader(jwtService.getAccessHeader(), "Bearer " + accessToken);
 
-        response.sendRedirect("/sign-up"); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
+        response.sendRedirect("http://localhost:3000/middlespot"); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
 
 //        jwtService.sendAccessAndRefreshToken(response, accessToken, null);
         // Role을 Guest에서 User로

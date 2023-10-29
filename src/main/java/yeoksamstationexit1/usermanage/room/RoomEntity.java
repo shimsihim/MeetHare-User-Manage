@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import yeoksamstationexit1.usermanage.room.enumClass.Category;
 import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
-import yeoksamstationexit1.usermanage.room.roomDTO.CreateRoomDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.request.CreateRoomDTO;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -25,9 +25,9 @@ public class RoomEntity {
     @Column(name = "room_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roomId;
-
+    @Enumerated(EnumType.STRING)
     private Category category;
-
+    @Enumerated(EnumType.STRING)
     private Processivity processivity; // 방의 진행상황
 
     private LocalDate fixDay;  // 만날 날
@@ -43,10 +43,13 @@ public class RoomEntity {
 
     private LocalDate periodEnd;
 
+    private String roomName;
+
     public RoomEntity(CreateRoomDTO dto) {
         this.category = dto.getCategory();
         this.periodStart = dto.getStartDate();
         this.periodEnd = dto.getEndDate();
         this.processivity = Processivity.InSubmission;
+        this.roomName = roomName;
     }
 }
