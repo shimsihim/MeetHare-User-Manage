@@ -10,9 +10,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
-import yeoksamstationexit1.usermanage.room.roomDTO.CreateRoomDTO;
-import yeoksamstationexit1.usermanage.room.roomDTO.RoomIdDTO;
-import yeoksamstationexit1.usermanage.room.roomDTO.addDeleteDayListDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.request.CreateRoomDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.request.RoomIdDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.request.addDeleteDayListDTO;
 
 import javax.validation.Valid;
 
@@ -35,14 +35,21 @@ public class RoomController {
         return ResponseEntity.ok(roomId);
     }
 
+    @GetMapping("/findmyroom")
+    public ResponseEntity<?> findMyRoom(@AuthenticationPrincipal UserDetails token){
+        ResponseEntity<?> response =  roomService.findPersonalRoom(token);
+        return response;
+    }
 
     //기존 방에 입장한 인원이면 방에 입장한 인원정보와 roomId 반환
     // 처음 입장 시 participant등록 후 본인의 기간 내의 불가능한 날짜 반환. -> 프론트에서 다시 방의 기간 내에 불가능한 시간 받기
     @GetMapping("/enter/{roomId}")
     public ResponseEntity<?> enterRoom(@AuthenticationPrincipal UserDetails token,@PathVariable(value = "roomId") Long roomId) throws Exception {
+        System.out.println("들어옴");
         if(token == null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("로그인이 필요합니다");
         }
+        System.out.println("리턴 지나침");
         ResponseEntity<?> status  =  roomGetInService.getIn(token,roomId);
 
         return status;

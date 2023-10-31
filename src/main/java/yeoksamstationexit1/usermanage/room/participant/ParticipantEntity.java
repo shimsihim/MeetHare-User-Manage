@@ -33,13 +33,13 @@ public class ParticipantEntity {
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
-
+    @Enumerated(EnumType.STRING)
     private Processivity progress;
 
     @Column(nullable = true)
     public String startpoint;
 
-
+    public String roomName;
 
     public ParticipantEntity(ParticipantEmbededId id ) {
         this.id = id;
@@ -64,13 +64,4 @@ public class ParticipantEntity {
 //    }
 
 
-
-
-
-
-
-
 }
-
-
-
