@@ -1,4 +1,4 @@
-package yeoksamstationexit1.usermanage.room.roomDTO;
+package yeoksamstationexit1.usermanage.room.roomDTO.response;
 
 import lombok.Data;
 

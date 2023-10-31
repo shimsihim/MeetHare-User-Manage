@@ -1,7 +1,6 @@
 package yeoksamstationexit1.usermanage.room;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,12 @@ import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartReque
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEmbededId;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEntity;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantRepository;
-import yeoksamstationexit1.usermanage.room.roomDTO.*;
+import yeoksamstationexit1.usermanage.room.roomDTO.request.CreateRoomDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.request.PlaceRequestDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.request.addDeleteDayListDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.response.PlaceResponseDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.response.RoomListDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.response.StationDTO;
 import yeoksamstationexit1.usermanage.user.UserEntity;
 import yeoksamstationexit1.usermanage.user.UserRepository;
 import yeoksamstationexit1.usermanage.user.entity.FixCalendarEntity;
@@ -52,14 +56,14 @@ public class RoomService {
         roomRepository.save(room);
 
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), room.getRoomId());
-        ParticipantEntity participantEntity = new ParticipantEntity();
+        ParticipantEntity participantEntity = new ParticipantEntity(id);
 
 
         /**
          * 현재 문제는 복합키만을 넣던가 
          * 아니면 entity들만을 넣으면 되어야 할 것 같은데 둘 다 넣고 있음 수정 해야 함
          */
-        participantEntity.setId(id);
+
         participantEntity.setUser(existUser);
         participantEntity.setRoom(room);
         participantEntity.setStartpoint(existUser.getHome());
@@ -69,6 +73,21 @@ public class RoomService {
         participantRepository.save(participantEntity);
         return room.getRoomId();
 
+    }
+
+    public ResponseEntity<?> findPersonalRoom(UserDetails token){
+        UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
+
+        List<ParticipantEntity> participateList = participantRepository.findByIdUserId(existUser.getId());
+        List<RoomListDTO> roomList = participateList.stream()
+                .map(participant -> {
+                    RoomListDTO roomListDTO = new RoomListDTO();
+                    roomListDTO.setRoomId(participant.getRoom().getRoomId());
+                    roomListDTO.setRoomName(participant.getRoomName()); // ParticipantEntity에서 roomName 가져오기
+                    return roomListDTO;
+                })
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(roomList);
     }
 
 
