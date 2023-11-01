@@ -7,4 +7,5 @@ public class RoomListDTO {
 
     private Long roomId;
     private String roomName;
+
 }

@@ -26,13 +26,15 @@ public class RoomController {
     private final RoomGetInService roomGetInService;
 
 
-    @Operation(description = "방 등록 메서드입니다.") // 방장이 기간을 설정한 방을 만든 후 생성된 roomId반환
+    @Operation(description = "방 등록 메서드입니다.")
     @PostMapping()
-    public ResponseEntity<Long> createRoom(@AuthenticationPrincipal UserDetails token , @RequestBody CreateRoomDTO createRoomDTO) throws Exception {
+    public ResponseEntity<?> createRoom(@AuthenticationPrincipal UserDetails token, @RequestBody CreateRoomDTO createRoomDTO) throws Exception {
+        Long roomId = roomService.registRoom(token, createRoomDTO);
+        System.out.println(roomId);
 
-        Long roomId = roomService.registRoom(token,createRoomDTO);
-
-        return ResponseEntity.ok(roomId);
+        // roomId를 ResponseEntity에 추가하여 응답
+        return new ResponseEntity<>(roomId, HttpStatus.OK);
+//        return ResponseEntity.status(HttpStatus.OK).body(roomId);
     }
 
     @GetMapping("/findmyroom")

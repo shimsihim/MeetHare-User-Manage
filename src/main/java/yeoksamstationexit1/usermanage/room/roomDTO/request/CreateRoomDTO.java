@@ -9,6 +9,8 @@ import java.time.LocalDate;
 @Data
 public class CreateRoomDTO {
 
+    private String roomName;
+
     private Category category;
 
     private LocalDate startDate;

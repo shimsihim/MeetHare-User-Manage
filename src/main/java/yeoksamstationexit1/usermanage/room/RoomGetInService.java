@@ -13,6 +13,7 @@ import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEmbededId;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEntity;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantRepository;
+import yeoksamstationexit1.usermanage.room.roomDTO.request.CreateRoomDTO;
 import yeoksamstationexit1.usermanage.room.roomDTO.response.ReturnRoomDTO;
 import yeoksamstationexit1.usermanage.user.UserEntity;
 import yeoksamstationexit1.usermanage.user.UserRepository;
@@ -22,6 +23,7 @@ import yeoksamstationexit1.usermanage.user.repository.FixCalendarRepository;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -49,18 +51,33 @@ public class RoomGetInService {
         //
 
         //방 정보와 방의 진행도 가져오기
-        RoomEntity roomEntity = roomRepository.findById(roomId).get();
+        Optional<RoomEntity> roomEntityOp = roomRepository.findById(roomId);
+        RoomEntity roomEntity;
+        if(roomEntityOp.isPresent()){
+            roomEntity = roomEntityOp.get();
+        }
+        else{
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
+
         Processivity roomProgressity = roomEntity.getProcessivity();
+        ReturnRoomDTO returnRoom = ReturnRoomDTO.builder()
+                .processivity(roomEntity.getProcessivity())
+                .category(roomEntity.getCategory())
+                .submitNumber(roomEntity.getSubmitNumber())
+                .periodStart(roomEntity.getPeriodStart().toString())
+                .periodEnd(roomEntity.getPeriodEnd().toString())
+                .fixDay(roomEntity.getFixDay())
+                .fixStation(roomEntity.getFixStation())
+                .fixPlace(roomEntity.getFixPlace())
+                .build();
 
         //방의 참가자 목록 받기
         List<ParticipantEntity> memberList = participantRepository.findByIdRoomId(roomId).get();
-        List<ReturnRoomDTO> returnRoomDTOList = memberList.stream()
+        List<String> nickNameList = memberList.stream()
                 .map(participantEntity -> {
-                    ReturnRoomDTO returnRoomDTO = new ReturnRoomDTO();
-                    returnRoomDTO.setNickname(participantEntity.getUser().getNickname());
-                    returnRoomDTO.setPersonalProgress(participantEntity.getProgress());
-                    returnRoomDTO.setRoomName(participantEntity.getRoomName());
-                    return returnRoomDTO;
+                    return participantEntity.getUser().getNickname();
                 })
                 .collect(Collectors.toList());
 
@@ -69,9 +86,9 @@ public class RoomGetInService {
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), roomId);
         Optional<ParticipantEntity> participantOp = participantRepository.findById(id);
         ParticipantEntity participantEntity;
-        System.out.println(123123);
-        System.out.println(123123);
-        System.out.println(123123);
+
+
+
         if (roomProgressity == Processivity.InSubmission) {
             //아직 참여하지 않은 경우 참여시키기
             if(participantOp.isEmpty()){
@@ -84,30 +101,18 @@ public class RoomGetInService {
                 participantRepository.save(participantEntity);
             }
             else{
-                System.out.println("아닐경우");
                 participantEntity = participantOp.get();
-                System.out.println("아닐경우");
             }
 
-            //본인 불가능한 시간
-            //멤버 리스트 받기
-            //방정보
-            //제출자 수
-            //방의 진행도
-            //나의 진행도
-            System.out.println("여기는 1번째 단계");
-            System.out.println("여기는 1번째 단계");
-            System.out.println("여기는 1번째 단계");
-            System.out.println("여기는 1번째 단계");
-            List<FixCalendarEntity> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId());
+            List<String> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId());
 
             Map<String, Object> response = new HashMap<>();
-            response.put("memberList", returnRoomDTOList);
+            response.put("memberList", nickNameList);
             response.put("fixCalendarList", myImpossibleList);
-            response.put("roomProgress", roomEntity.getProcessivity());
-            response.put("submitNumber", roomEntity.getSubmitNumber());
+            response.put("roominfo", returnRoom);
             response.put("myProgress", participantEntity.getProgress());
-            return ResponseEntity.accepted().body(response); // 불가능한 시간 반환 받아서 프론트에서 수정 한 후 저장
+            response.put("myRoomName", participantEntity.getRoomName());
+            return ResponseEntity.ok(response); // 불가능한 시간 반환 받아서 프론트에서 수정 한 후 저장
 
         } else {
 
@@ -122,11 +127,10 @@ public class RoomGetInService {
 
 
             Map<String, Object> response = new HashMap<>();
-            response.put("memberList", returnRoomDTOList);
-            response.put("roomId", roomId);
-            response.put("roomProgress", roomEntity.getProcessivity());
-            response.put("submitNumber", roomEntity.getSubmitNumber());
+            response.put("memberList", nickNameList);
+            response.put("roominfo", returnRoom);
             response.put("myProgress", participantEntity.getProgress());
+            response.put("myRoomName", participantEntity.getRoomName());
 
             if (roomProgressity == Processivity.RecommendDay) {
                 //InSubmission에서 RecommendDay으로 넘어올 때 날짜를 넣어줄 것이고
@@ -137,7 +141,7 @@ public class RoomGetInService {
                 //다음으로 넘어가기
 
 
-                List<FixCalendarEntity> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId());
+                List<String> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId());
                 response.put("fixCalendarList", myImpossibleList);
                 response.put("fixDay", roomEntity.getFixDay());
 
@@ -158,9 +162,11 @@ public class RoomGetInService {
 
     //유저의 과거 불가능한 날짜 삭제
     //유저의 불가능한 날짜 반환
-    public List<FixCalendarEntity> getUserImpossibleTimeAndDeletePastDay(Long userId){
+    public List<String> getUserImpossibleTimeAndDeletePastDay(Long userId){
+
         List<FixCalendarEntity> fixCalendarList = fixCalendarRepository.findByIdUserIdOrderByImpossibleDateAsc(userId).get();
         LocalDate now = LocalDate.now();
+
         Iterator<FixCalendarEntity> iterator = fixCalendarList.iterator();
         //실제 삭제되는지 확인 필요
         //실제 삭제되는지 확인 필요
@@ -171,11 +177,12 @@ public class RoomGetInService {
                 iterator.remove();
             }
         }
-        return fixCalendarList;
+
+
+
+        return fixCalendarList.stream()
+                .map(participantEntity->{
+                    return participantEntity.getId().getImpossibleDate().toString();
+                }).collect(Collectors.toList());
     }
-
-
-
-
-
 }

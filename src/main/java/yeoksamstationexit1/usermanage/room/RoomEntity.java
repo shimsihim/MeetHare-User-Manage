@@ -50,6 +50,6 @@ public class RoomEntity {
         this.periodStart = dto.getStartDate();
         this.periodEnd = dto.getEndDate();
         this.processivity = Processivity.InSubmission;
-        this.roomName = roomName;
+        this.roomName = dto.getRoomName();
     }
 }

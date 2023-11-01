@@ -56,7 +56,7 @@ public class RoomService {
         roomRepository.save(room);
 
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), room.getRoomId());
-        ParticipantEntity participantEntity = new ParticipantEntity(id);
+        ParticipantEntity participantEntity = new ParticipantEntity(id,createRoomDTO.getRoomName());
 
 
         /**
@@ -68,7 +68,6 @@ public class RoomService {
         participantEntity.setRoom(room);
         participantEntity.setStartpoint(existUser.getHome());
 
-        System.out.println(participantEntity.toString());
 
         participantRepository.save(participantEntity);
         return room.getRoomId();
