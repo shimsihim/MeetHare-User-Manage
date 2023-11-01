@@ -21,7 +21,7 @@ public class FixCalendarEntity {
     @EmbeddedId
     private FixCalendertId id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY )
     @JoinColumn(name = "user_id")
     @MapsId("userId")
     private UserEntity userEntity;
