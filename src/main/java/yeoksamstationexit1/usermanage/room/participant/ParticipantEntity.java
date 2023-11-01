@@ -23,9 +23,10 @@ public class ParticipantEntity {
     @EmbeddedId
     private ParticipantEmbededId id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("roomId") // roomId를 기본 키로 사용
     @JoinColumn(name = "room_id")
+
     private RoomEntity room;
 
     @ManyToOne
@@ -44,6 +45,10 @@ public class ParticipantEntity {
     public ParticipantEntity(ParticipantEmbededId id ) {
         this.id = id;
 
+    }
+    public ParticipantEntity(ParticipantEmbededId id, String roomname ) {
+        this.id = id;
+        this.roomName = roomname;
     }
 
     public ParticipantEntity(UserEntity user,RoomEntity room , String startpoint) {
