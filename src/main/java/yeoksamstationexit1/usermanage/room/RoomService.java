@@ -4,6 +4,7 @@ package yeoksamstationexit1.usermanage.room;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +18,7 @@ import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartReque
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEmbededId;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEntity;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantRepository;
-import yeoksamstationexit1.usermanage.room.roomDTO.request.CreateRoomDTO;
-import yeoksamstationexit1.usermanage.room.roomDTO.request.PlaceRequestDTO;
-import yeoksamstationexit1.usermanage.room.roomDTO.request.addDeleteDayListDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.request.*;
 import yeoksamstationexit1.usermanage.room.roomDTO.response.PlaceResponseDTO;
 import yeoksamstationexit1.usermanage.room.roomDTO.response.RoomListDTO;
 import yeoksamstationexit1.usermanage.room.roomDTO.response.StationDTO;
@@ -29,10 +28,13 @@ import yeoksamstationexit1.usermanage.user.entity.FixCalendarEntity;
 import yeoksamstationexit1.usermanage.user.entity.FixCalendertId;
 import yeoksamstationexit1.usermanage.user.repository.FixCalendarRepository;
 
+import javax.servlet.http.HttpServletResponse;
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -52,7 +54,8 @@ public class RoomService {
         UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
 
         RoomEntity room = new RoomEntity(createRoomDTO);
-
+        room.setMaster(existUser.getNickname());
+        room.setNumber(1);
         roomRepository.save(room);
 
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), room.getRoomId());
@@ -102,7 +105,7 @@ public class RoomService {
      * 방정보와 방의 유저정보를 가져올 때 join문 쓰기
      */
     @Transactional
-    public ResponseEntity<String> updateMyImpossibleTime(UserDetails token, addDeleteDayListDTO dayList) {
+    public ResponseEntity<Void> updateMyImpossibleTime(UserDetails token, addDeleteDayListDTO dayList) {
 
         UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
 
@@ -120,8 +123,8 @@ public class RoomService {
 
         for (int i = 0; i < addList.size(); ++i) {
             FixCalendertId id = new FixCalendertId(existUser.getId(), addList.get(i));
-            FixCalendarEntity fixcal = new FixCalendarEntity(id, existUser);
-            beforeList.add(fixcal);
+            FixCalendarEntity fixcalendar = new FixCalendarEntity(id, existUser);
+            beforeList.add(fixcalendar);
         }
 
 
@@ -147,9 +150,47 @@ public class RoomService {
             roomEntity.setSubmitNumber(roomEntity.getSubmitNumber()+1);
         }
 
+        /**
+         * 여기부터는 따로 update문 만들기! 왜냐하면 이걸 위해서 roomEntity를 불러오는게 손해 아닐까?
+         */
 
 
-        return ResponseEntity.ok("불가능한 시간 업데이트");
+        return ResponseEntity.ok().build();
+    }
+
+
+    //방 내의 모든 유저의 불가능한 날짜를 가져와서
+    //모든 가능힌 날짜 반환
+    public ResponseEntity<Map<String,List<String>>> getAllImpossTime(UserDetails token, GetAllTimeInRoomDTO getAllTimeInRoomDTO) {
+
+        Optional<List<ParticipantEntity>> userIdListOp = participantRepository.findByIdRoomId(getAllTimeInRoomDTO.getRoomId());
+        List<Long> userIdList = userIdListOp.map(participantEntities -> {
+            return participantEntities.stream()
+                    .map(participantEntity -> participantEntity.getUser().getId())
+                    .collect(Collectors.toList());
+        }).orElse(Collections.emptyList());
+
+        List<LocalDate> roomTimeList = fixCalendarRepository.findByUserListAndDateRange(userIdList,getAllTimeInRoomDTO.getPeriodStart(),getAllTimeInRoomDTO.getPeriodEnd());
+
+
+        
+        //기간 내의 날짜 리스트 생성
+        List<LocalDate> dateList = Stream.iterate(getAllTimeInRoomDTO.getPeriodStart(), date -> date.plusDays(1))
+                .limit(getAllTimeInRoomDTO.getPeriodStart().until(getAllTimeInRoomDTO.getPeriodEnd().plusDays(1)).getDays())
+                .collect(Collectors.toList());
+
+
+
+        List<String> excludedDates = dateList.stream()
+                .filter(date->!roomTimeList.contains(date))
+                .map(date -> date.toString())
+                .collect(Collectors.toList());
+
+
+        Map<String,List<String>> response = new HashMap<>();
+        response.put("dateList",excludedDates);
+
+        return ResponseEntity.ok(response);
     }
 
 
@@ -160,50 +201,61 @@ public class RoomService {
         UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), changeLocalStartRequestDTO.getRoomId());
 
+        RoomEntity roomEntity = roomRepository.findById(changeLocalStartRequestDTO.getRoomId()).orElseThrow(()->new NoSuchElementException("존재하지 않는 방"));
         // 여기서 방의 유저가 아니면 빠꾸 시켜야 함
-        ParticipantEntity participant = participantRepository.findById(id).get();
+        ParticipantEntity participant = participantRepository.findById(id).orElseThrow(()->new NoSuchElementException("방에 없는 사람"));
         participant.setPoint(changeLocalStartRequestDTO.getStartPoint());
 
-        if(participant.getProgress()!=Processivity.RecommendPlace){
-            participant.setProgress(Processivity.RecommendPlace);
-            RoomEntity roomEntity = roomRepository.findById(changeLocalStartRequestDTO.getRoomId()).get();
+        //RecommendStation 출발지 설정 완료, 역 추천 기다리는 중
+        if(participant.getProgress()!=Processivity.RecommendStation){
+            participant.setProgress(Processivity.RecommendStation);
             roomEntity.setSubmitNumber(roomEntity.getSubmitNumber()+1);
-
         }
+        if(roomEntity.getNumber() == roomEntity.getSubmitNumber()){
+            roomEntity.setProcessivity(Processivity.RecommendStation);
 
-        //일단 입장유저의 진행도를 보고
-        // 진행도가 동일하면 출발지만 바꾸고
-        //불일치하면 출발지와 개인진행도, 방제출자수,  바꾸고
-
-
+            //여기서 새로고침을 하기 위해 다른 값을 리턴해줘야 하나?
+        }
 
         return ResponseEntity.ok("해당 약속의 출발지 설정");
     }
 
-    public ResponseEntity<?> nextClick( Long roomId) {
+
+
+    public ResponseEntity<Void> saveFixDate(FixDateDTO fixDateDTO) {
+        //방 정보 찾아와서
+       RoomEntity room =  roomRepository.findById(fixDateDTO.getRoomId()).orElseThrow(() -> new NoSuchElementException());
+
+       room.setFixDay(fixDateDTO.getDate());
+       room.setProcessivity(Processivity.SubmitStation);
+       room.setSubmitNumber(0);
+
+       roomRepository.save(room);
+
+        return ResponseEntity.ok().build();
+
+    }
+
+        public ResponseEntity<?> nextClick( Long roomId) {
         //방 정보 찾아와서
         RoomEntity roomEntity = roomRepository.findById(roomId).get();
         
-//        수정 성공하면 숫자 0으로 바꿔야 함
-//        roomEntity.setSubmitNumber(0);
+
 
         Processivity processivity = roomEntity.getProcessivity();
         List<ParticipantEntity> participantList = participantRepository.findByIdRoomId(roomId).get();
 
         Processivity nextProcessivity;
-        if(processivity==Processivity.InSubmission){
-            boolean hasFixDay = recommendDay(roomEntity,participantList);
-            if(!hasFixDay){
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("가능한 날짜가 없습니다.");
-            }
-            nextProcessivity = Processivity.RecommendDay;
-        }
-        else {
-            nextProcessivity = nextProcess(processivity, roomEntity, participantList);
-        }
+
+        nextProcessivity = nextProcess(processivity, roomEntity, participantList);
+
         changeParticipantsProcess(participantList,nextProcessivity);
+
         roomEntity.setProcessivity(nextProcessivity);
 
+
+        //        수정 성공하면 숫자 0으로 바꿔야 함
+        roomEntity.setSubmitNumber(0);
 
         return ResponseEntity.ok("Next");
     }
@@ -240,59 +292,27 @@ public class RoomService {
          */
         Processivity next = process;
 
-        if(process == Processivity.RecommendDay){
+        if(process == Processivity.InSubmission){
+            next = Processivity.RecommendDay;
+        }
+        else if(process == Processivity.RecommendDay) {
+            next = Processivity.SubmitStation;
+        }
+
+        else if(process == Processivity.SubmitStation){
             next = Processivity.RecommendStation;
         }
 
 
-        else if(process == Processivity.RecommendStation){
+        else if(process == Processivity.RecommendStation) {
             next = Processivity.RecommendPlace;
-
-//            Mono<StationResponseDTO> response = webClient.post()
-//                        .uri("/map/middlespot")
-//                        .bodyValue(requestDTO)
-//                        .retrieve()
-//                        .bodyToMono(StationResponseDTO.class);
-
         }
 
-
-        else if(process == Processivity.RecommendPlace){
+        else if(process == Processivity.RecommendPlace) {
             next = Processivity.Fix;
-
-            PlaceRequestDTO placeRequestDTO = new PlaceRequestDTO();
-            /**
-             * 만들어놓기
-             */
-            List<Long>userList = participantList.stream()
-                    .map(participant -> participant.getUser().getId())
-                    .collect(Collectors.toList());
-
-            int stationId = -1;
-            try {
-                stationId = (objectMapper.readValue(roomEntity.getFixStation(), StationDTO.class).getStationId());
-            } catch (Exception e) {
-
-            }
-
-            placeRequestDTO = PlaceRequestDTO.builder()
-                    .station_id(stationId)
-                    .category(roomEntity.getCategory().toString())
-                    .user_list(userList)
-                    .final_time(0l)
-                    .build();
-
-            Mono<PlaceResponseDTO> response = webClient.post()
-                .uri("/place/complex")
-                .bodyValue(placeRequestDTO)
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(PlaceResponseDTO.class);
-
-//            장소를 저장해야 함
-//            roomEntity.setFixPlace();
-
         }
+
+
         return next;
 
     }
