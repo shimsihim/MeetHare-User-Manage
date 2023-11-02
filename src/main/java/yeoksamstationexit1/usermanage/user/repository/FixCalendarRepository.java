@@ -2,6 +2,7 @@ package yeoksamstationexit1.usermanage.user.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import yeoksamstationexit1.usermanage.user.dayType;
 import yeoksamstationexit1.usermanage.user.entity.FixCalendarEntity;
 
@@ -18,5 +19,15 @@ public interface FixCalendarRepository  extends JpaRepository<FixCalendarEntity,
 
     @Query("SELECT DISTINCT fc.id.impossibleDate FROM FixCalendarEntity fc WHERE fc.id.userId IN :userIds")
     List<LocalDate> findByUserList(List<Long> userIds);
+
+    @Query("SELECT DISTINCT fc.id.impossibleDate FROM FixCalendarEntity fc " +
+            "WHERE fc.id.userId IN :userIds " +
+            "AND fc.id.impossibleDate >= :startDate " +
+            "AND fc.id.impossibleDate <= :endDate")
+    List<LocalDate> findByUserListAndDateRange(@Param("userIds") List<Long> userIds,
+                                               @Param("startDate") LocalDate startDate,
+                                               @Param("endDate") LocalDate endDate);
+
+
 
 }
