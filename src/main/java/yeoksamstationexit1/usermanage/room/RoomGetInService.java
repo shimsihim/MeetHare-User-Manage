@@ -71,6 +71,8 @@ public class RoomGetInService {
                 .fixDay(roomEntity.getFixDay())
                 .fixStation(roomEntity.getFixStation())
                 .fixPlace(roomEntity.getFixPlace())
+                .master(roomEntity.getMaster())
+                .number(roomEntity.getNumber())
                 .build();
 
         //방의 참가자 목록 받기
@@ -94,7 +96,7 @@ public class RoomGetInService {
             if(participantOp.isEmpty()){
 
                 participantEntity = new ParticipantEntity(id);
-
+                roomEntity.setNumber(roomEntity.getNumber()+1);
                 participantEntity.setRoomName(roomEntity.getRoomName());
                 participantEntity.setUser(existUser);
                 participantEntity.setRoom(roomEntity);
@@ -104,7 +106,7 @@ public class RoomGetInService {
                 participantEntity = participantOp.get();
             }
 
-            List<String> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId());
+            List<String> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId(),roomEntity.getPeriodStart(),roomEntity.getPeriodEnd());
 
             Map<String, Object> response = new HashMap<>();
             response.put("memberList", nickNameList);
@@ -141,7 +143,7 @@ public class RoomGetInService {
                 //다음으로 넘어가기
 
 
-                List<String> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId());
+                List<String> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId(),roomEntity.getPeriodStart(),roomEntity.getPeriodEnd());
                 response.put("fixCalendarList", myImpossibleList);
                 response.put("fixDay", roomEntity.getFixDay());
 
@@ -162,10 +164,9 @@ public class RoomGetInService {
 
     //유저의 과거 불가능한 날짜 삭제
     //유저의 불가능한 날짜 반환
-    public List<String> getUserImpossibleTimeAndDeletePastDay(Long userId){
+    public List<String> getUserImpossibleTimeAndDeletePastDay(Long userId, LocalDate start,LocalDate end){
 
         List<FixCalendarEntity> fixCalendarList = fixCalendarRepository.findByIdUserIdOrderByImpossibleDateAsc(userId).get();
-        LocalDate now = LocalDate.now();
 
         Iterator<FixCalendarEntity> iterator = fixCalendarList.iterator();
         //실제 삭제되는지 확인 필요
@@ -173,7 +174,9 @@ public class RoomGetInService {
         //실제 삭제되는지 확인 필요
         while (iterator.hasNext()) {
             FixCalendarEntity entity = iterator.next();
-            if (entity.getId().getImpossibleDate().isBefore(now)) {
+            if (entity.getId().getImpossibleDate().isBefore(start)) {
+                iterator.remove();
+            } else if (entity.getId().getImpossibleDate().isAfter(end)) {
                 iterator.remove();
             }
         }

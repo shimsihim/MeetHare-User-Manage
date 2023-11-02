@@ -10,11 +10,13 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
-import yeoksamstationexit1.usermanage.room.roomDTO.request.CreateRoomDTO;
-import yeoksamstationexit1.usermanage.room.roomDTO.request.RoomIdDTO;
-import yeoksamstationexit1.usermanage.room.roomDTO.request.addDeleteDayListDTO;
+import yeoksamstationexit1.usermanage.room.roomDTO.request.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RequestMapping("api/room")
@@ -30,7 +32,6 @@ public class RoomController {
     @PostMapping()
     public ResponseEntity<?> createRoom(@AuthenticationPrincipal UserDetails token, @RequestBody CreateRoomDTO createRoomDTO) throws Exception {
         Long roomId = roomService.registRoom(token, createRoomDTO);
-        System.out.println(roomId);
 
         // roomId를 ResponseEntity에 추가하여 응답
         return new ResponseEntity<>(roomId, HttpStatus.OK);
@@ -58,17 +59,34 @@ public class RoomController {
     }
 
     @PostMapping("/submittime") // 본인 불가능한 날짜 제출
-    public ResponseEntity<String> submitMyImpossibleTime(@AuthenticationPrincipal UserDetails token, @RequestBody addDeleteDayListDTO dayList){
+    public ResponseEntity<Void> submitMyImpossibleTime(@AuthenticationPrincipal UserDetails token, @RequestBody addDeleteDayListDTO dayList){
         //개인의 특정 방의 출발지 변경
-        ResponseEntity<String> response = roomService.updateMyImpossibleTime(token, dayList);
+        ResponseEntity<Void> response = roomService.updateMyImpossibleTime(token, dayList);
+
+        return response;
+    }
+
+    @PostMapping("/getallroomtime") // 본인 불가능한 날짜 제출
+    public ResponseEntity<Map<String,List<String>>> getAllRoomTime(@AuthenticationPrincipal UserDetails token,@RequestBody GetAllTimeInRoomDTO getAllTimeInRoomDTO){
+        //개인의 특정 방의 출발지 변경
+
+
+        ResponseEntity<Map<String, List<String>>> response = roomService.getAllImpossTime(token,getAllTimeInRoomDTO);
 
         return response;
     }
 
 
+    @PostMapping("sendFixDate")
+    public ResponseEntity<Void> sendFixDate(@RequestBody @Valid FixDateDTO fixDate){
+        //개인의 특정 방의 출발지 변경
+        ResponseEntity<Void> response = roomService.saveFixDate(fixDate);
+
+        return response;
+    }
 
     @PostMapping("/changestartpoint") // 해당 약속의 출발지점 수정
-    public ResponseEntity<String> changeSpecificStartPoint(@AuthenticationPrincipal UserDetails token,@Valid @RequestBody ChangeLocalStartRequestDTO changeLocalStartRequestDTO){
+    public ResponseEntity<String> changeSpecificStartPoint(@AuthenticationPrincipal UserDetails token, @Valid @RequestBody ChangeLocalStartRequestDTO changeLocalStartRequestDTO){
         //개인의 특정 방의 출발지 변경
         ResponseEntity<String> response = roomService.changeLocalStartPoint(token, changeLocalStartRequestDTO);
 

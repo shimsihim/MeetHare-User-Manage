@@ -30,6 +30,10 @@ public class RoomEntity {
     @Enumerated(EnumType.STRING)
     private Processivity processivity; // 방의 진행상황
 
+    private int number;
+
+    private String master;
+
     private LocalDate fixDay;  // 만날 날
 
     private String fixPlace; // 만날 장소
