@@ -56,12 +56,15 @@ public class RoomGetInService {
         if(roomEntityOp.isPresent()){
             roomEntity = roomEntityOp.get();
         }
+        //방 없으면 nocontent
         else{
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
 
-
+        //진행도
         Processivity roomProgressity = roomEntity.getProcessivity();
+        
+        //방의 진행도, 카테고리 , 제출자, 기간 시작일, 기간 종료일, 고정날, 고정역, 고정장소, 주인,총 참여인원
         ReturnRoomDTO returnRoom = ReturnRoomDTO.builder()
                 .processivity(roomEntity.getProcessivity())
                 .category(roomEntity.getCategory())
@@ -84,13 +87,14 @@ public class RoomGetInService {
                 .collect(Collectors.toList());
 
         //해당 방의 유저의 해당 방정보 가져오기
+        //나의 방정보 가져오기
         UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), roomId);
         Optional<ParticipantEntity> participantOp = participantRepository.findById(id);
         ParticipantEntity participantEntity;
 
 
-
+        //나의 불가능한 날짜 넣는 중
         if (roomProgressity == Processivity.InSubmission) {
             //아직 참여하지 않은 경우 참여시키기
             if(participantOp.isEmpty()){
@@ -102,6 +106,7 @@ public class RoomGetInService {
                 participantEntity.setRoom(roomEntity);
                 participantRepository.save(participantEntity);
             }
+            //참여한 경우 나의 정보
             else{
                 participantEntity = participantOp.get();
             }
@@ -127,13 +132,15 @@ public class RoomGetInService {
                 participantEntity = participantOp.get();
             }
 
-
+            //여기는 fixCalendarList가 없음 왜냐면 다음 분기마다 다 다른 정보 필요
             Map<String, Object> response = new HashMap<>();
             response.put("memberList", nickNameList);
             response.put("roominfo", returnRoom);
             response.put("myProgress", participantEntity.getProgress());
             response.put("myRoomName", participantEntity.getRoomName());
 
+
+            //여기는 가능한 날짜 보내기
             if (roomProgressity == Processivity.RecommendDay) {
                 //InSubmission에서 RecommendDay으로 넘어올 때 날짜를 넣어줄 것이고
                 //이 값을 일단 반환해줌.

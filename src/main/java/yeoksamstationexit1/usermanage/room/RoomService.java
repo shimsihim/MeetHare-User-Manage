@@ -54,7 +54,7 @@ public class RoomService {
         UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
 
         RoomEntity room = new RoomEntity(createRoomDTO);
-        room.setMaster(existUser.getNickname());
+        room.setMaster(existUser.getEmail());
         room.setNumber(1);
         roomRepository.save(room);
 
