@@ -50,8 +50,8 @@ public class RoomService {
 
 
     //방 등록
-    public Long registRoom(UserDetails token, CreateRoomDTO createRoomDTO) {
-        UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
+    public Long registRoom(UserEntity existUser, CreateRoomDTO createRoomDTO) {
+
 
         RoomEntity room = new RoomEntity(createRoomDTO);
         room.setMaster(existUser.getEmail());
@@ -77,8 +77,8 @@ public class RoomService {
 
     }
 
-    public ResponseEntity<?> findPersonalRoom(UserDetails token){
-        UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
+    public ResponseEntity<?> findPersonalRoom(UserEntity existUser){
+
 
         List<ParticipantEntity> participateList = participantRepository.findByIdUserId(existUser.getId());
         List<RoomListDTO> roomList = participateList.stream()
@@ -105,9 +105,9 @@ public class RoomService {
      * 방정보와 방의 유저정보를 가져올 때 join문 쓰기
      */
     @Transactional
-    public ResponseEntity<Void> updateMyImpossibleTime(UserDetails token, addDeleteDayListDTO dayList) {
+    public ResponseEntity<Void> updateMyImpossibleTime(UserEntity existUser, addDeleteDayListDTO dayList) {
 
-        UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
+
 
         List<FixCalendarEntity> beforeList = fixCalendarRepository.findByIdUserIdOrderByImpossibleDateAsc(existUser.getId()).get();
         List<LocalDate> addList = dayList.getAddDayList();
@@ -161,7 +161,7 @@ public class RoomService {
 
     //방 내의 모든 유저의 불가능한 날짜를 가져와서
     //모든 가능힌 날짜 반환
-    public ResponseEntity<Map<String,List<String>>> getAllImpossTime(UserDetails token, GetAllTimeInRoomDTO getAllTimeInRoomDTO) {
+    public ResponseEntity<Map<String,List<String>>> getAllImpossTime(UserEntity existUser, GetAllTimeInRoomDTO getAllTimeInRoomDTO) {
 
         Optional<List<ParticipantEntity>> userIdListOp = participantRepository.findByIdRoomId(getAllTimeInRoomDTO.getRoomId());
         List<Long> userIdList = userIdListOp.map(participantEntities -> {
@@ -196,15 +196,17 @@ public class RoomService {
 
     //나의 방에서의 출발지 수정을 했으므로 나의 진행도와 방의 제출자 +1
     //변변경은 확인했음
-    public ResponseEntity<String> changeLocalStartPoint(UserDetails token, ChangeLocalStartRequestDTO changeLocalStartRequestDTO) {
+    public ResponseEntity<String> changeLocalStartPoint(UserEntity existUser, ChangeLocalStartRequestDTO changeLocalStartRequestDTO) {
 
-        UserEntity existUser = userRepository.findByEmail(token.getUsername()).get();
+
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), changeLocalStartRequestDTO.getRoomId());
 
         RoomEntity roomEntity = roomRepository.findById(changeLocalStartRequestDTO.getRoomId()).orElseThrow(()->new NoSuchElementException("존재하지 않는 방"));
         // 여기서 방의 유저가 아니면 빠꾸 시켜야 함
         ParticipantEntity participant = participantRepository.findById(id).orElseThrow(()->new NoSuchElementException("방에 없는 사람"));
         participant.setPoint(changeLocalStartRequestDTO.getStartPoint());
+        participant.setLatitude(changeLocalStartRequestDTO.getLatitude());
+        participant.setLongitude(changeLocalStartRequestDTO.getLongitude());
 
         //RecommendStation 출발지 설정 완료, 역 추천 기다리는 중
         if(participant.getProgress()!=Processivity.RecommendStation){
