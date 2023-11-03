@@ -6,7 +6,11 @@ import lombok.NonNull;
 @Data
 public class ChangeLocalStartRequestDTO {
 
-    Long roomId;
+    private Long roomId;
 
-    String startPoint;
+    private String startPoint;
+
+    private double latitude;
+
+    private double longitude;
 }
