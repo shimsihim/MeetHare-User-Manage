@@ -11,7 +11,7 @@ public class webClientUtil {
     @Bean
     public WebClient webClient() {
         WebClient webClient = WebClient.builder()
-                .baseUrl("http://www.meethare.site")
+                .baseUrl("https://meethare.site")
                 .defaultHeader("Content-Type", "application/json")
                 .exchangeStrategies(exchangeStrategies)
                 .build();

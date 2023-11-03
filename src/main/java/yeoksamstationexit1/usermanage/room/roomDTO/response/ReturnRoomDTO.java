@@ -26,7 +26,11 @@ public class ReturnRoomDTO {//방입장시 기본 정보들
 
     private int submitNumber; // 시간과 장소 제출 인원
 
+    private int number;
+
     private String periodStart;
 
     private String periodEnd;
+
+    private String master;
 }
