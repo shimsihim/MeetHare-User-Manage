@@ -24,8 +24,7 @@ spring:
         diarect: org.hibernate.dialect.MySQL5InnoDBDialect # 작성할 쿼리의 기준 DB 엔진 설정
         format_sql: true # 쿼리 포맷팅
         use_sql_comments: true # SQL 쿼리에 주석으로 추가정보 제공
-        jdbc:
-          time_zone: Asia/Seoul
+
 
 
 jwt:
