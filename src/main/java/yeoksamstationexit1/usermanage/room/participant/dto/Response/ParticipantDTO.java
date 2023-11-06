@@ -11,7 +11,7 @@ public class ParticipantDTO {
 
     private Long id;
     private String nickName;
-    private String startpoint ;
+    private String stationName ;
     private double latitude ;
     private double longitude ;
 

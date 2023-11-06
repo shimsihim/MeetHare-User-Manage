@@ -7,15 +7,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
 import yeoksamstationexit1.usermanage.room.roomDTO.request.*;
 import yeoksamstationexit1.usermanage.user.UserEntity;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +30,6 @@ public class RoomController {
     @PostMapping()
     public ResponseEntity<?> createRoom(@AuthenticationPrincipal UserEntity user, @RequestBody CreateRoomDTO createRoomDTO) throws Exception {
         Long roomId = roomService.registRoom(user, createRoomDTO);
-
         // roomId를 ResponseEntity에 추가하여 응답
         return new ResponseEntity<>(roomId, HttpStatus.OK);
 //        return ResponseEntity.status(HttpStatus.OK).body(roomId);
@@ -49,11 +45,9 @@ public class RoomController {
     // 처음 입장 시 participant등록 후 본인의 기간 내의 불가능한 날짜 반환. -> 프론트에서 다시 방의 기간 내에 불가능한 시간 받기
     @GetMapping("/enter/{roomId}")
     public ResponseEntity<?> enterRoom(@AuthenticationPrincipal UserEntity user,@PathVariable(value = "roomId") Long roomId) throws Exception {
-        System.out.println("들어옴");
         if(user == null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("로그인이 필요합니다");
         }
-        System.out.println("리턴 지나침");
         ResponseEntity<?> status  =  roomGetInService.getIn(user,roomId);
 
         return status;
@@ -101,13 +95,19 @@ public class RoomController {
     //최적화 미완료X
     @PostMapping("/nextforce") // 해당 약속의 강제 다음
     public ResponseEntity<?> nextForce(@AuthenticationPrincipal UserEntity user,@RequestBody RoomIdDTO roomIdDTO){
-        System.out.println(roomIdDTO.getRoomId());
         //개인의 특정 방의 출발지 변경
         ResponseEntity<?> response = roomService.nextClick(roomIdDTO.getRoomId());
 
         return response;
     }
 
+    @PostMapping("/nameChange") // 해당 방의 이름 변경
+    public ResponseEntity<?> nameChange(@AuthenticationPrincipal UserEntity user,@RequestBody NameChangeDTO nameChangeDTO){
+        //개인의 특정 방의 출발지 변경
+        ResponseEntity<Void> response = roomService.changeName(user,nameChangeDTO);
+
+        return null;
+    }
 
 
 

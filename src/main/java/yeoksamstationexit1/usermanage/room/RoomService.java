@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
@@ -59,7 +60,7 @@ public class RoomService {
         roomRepository.save(room);
 
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), room.getRoomId());
-        ParticipantEntity participantEntity = new ParticipantEntity(id,createRoomDTO.getRoomName());
+        ParticipantEntity participantEntity = new ParticipantEntity(id, createRoomDTO.getRoomName());
 
 
         /**
@@ -77,7 +78,7 @@ public class RoomService {
 
     }
 
-    public ResponseEntity<?> findPersonalRoom(UserEntity existUser){
+    public ResponseEntity<?> findPersonalRoom(UserEntity existUser) {
 
 
         List<ParticipantEntity> participateList = participantRepository.findByIdUserId(existUser.getId());
@@ -101,12 +102,11 @@ public class RoomService {
      * 또한 delete가 되지 않음
      * saveAll을 1번으로 처리한다고 해도
      * deleteAll또한 쿼리가 날아감
-     * 
+     * <p>
      * 방정보와 방의 유저정보를 가져올 때 join문 쓰기
      */
     @Transactional
     public ResponseEntity<Void> updateMyImpossibleTime(UserEntity existUser, addDeleteDayListDTO dayList) {
-
 
 
         List<FixCalendarEntity> beforeList = fixCalendarRepository.findByIdUserIdOrderByImpossibleDateAsc(existUser.getId()).get();
@@ -140,14 +140,13 @@ public class RoomService {
         fixCalendarRepository.deleteAll(newDeleteList);
 
 
-
         //아직 제출하지 않은 경우 방 내의 제추자수 +1 과 나의 진행도 +1
         ParticipantEntity participantEntity = participantRepository.findByIdUserIdAndIdRoomId(existUser.getId(), dayList.getRoomId());
 
-        if(participantEntity.getProgress() != Processivity.RecommendDay){
+        if (participantEntity.getProgress() != Processivity.RecommendDay) {
             RoomEntity roomEntity = roomRepository.findById(dayList.getRoomId()).get();
             participantEntity.setProgress(Processivity.RecommendDay);
-            roomEntity.setSubmitNumber(roomEntity.getSubmitNumber()+1);
+            roomEntity.setSubmitNumber(roomEntity.getSubmitNumber() + 1);
         }
 
         /**
@@ -161,7 +160,7 @@ public class RoomService {
 
     //방 내의 모든 유저의 불가능한 날짜를 가져와서
     //모든 가능힌 날짜 반환
-    public ResponseEntity<Map<String,List<String>>> getAllImpossTime(UserEntity existUser, GetAllTimeInRoomDTO getAllTimeInRoomDTO) {
+    public ResponseEntity<Map<String, List<String>>> getAllImpossTime(UserEntity existUser, GetAllTimeInRoomDTO getAllTimeInRoomDTO) {
 
         Optional<List<ParticipantEntity>> userIdListOp = participantRepository.findByIdRoomId(getAllTimeInRoomDTO.getRoomId());
         List<Long> userIdList = userIdListOp.map(participantEntities -> {
@@ -170,25 +169,23 @@ public class RoomService {
                     .collect(Collectors.toList());
         }).orElse(Collections.emptyList());
 
-        List<LocalDate> roomTimeList = fixCalendarRepository.findByUserListAndDateRange(userIdList,getAllTimeInRoomDTO.getPeriodStart(),getAllTimeInRoomDTO.getPeriodEnd());
+        List<LocalDate> roomTimeList = fixCalendarRepository.findByUserListAndDateRange(userIdList, getAllTimeInRoomDTO.getPeriodStart(), getAllTimeInRoomDTO.getPeriodEnd());
 
 
-        
         //기간 내의 날짜 리스트 생성
         List<LocalDate> dateList = Stream.iterate(getAllTimeInRoomDTO.getPeriodStart(), date -> date.plusDays(1))
                 .limit(getAllTimeInRoomDTO.getPeriodStart().until(getAllTimeInRoomDTO.getPeriodEnd().plusDays(1)).getDays())
                 .collect(Collectors.toList());
 
 
-
         List<String> excludedDates = dateList.stream()
-                .filter(date->!roomTimeList.contains(date))
+                .filter(date -> !roomTimeList.contains(date))
                 .map(date -> date.toString())
                 .collect(Collectors.toList());
 
 
-        Map<String,List<String>> response = new HashMap<>();
-        response.put("dateList",excludedDates);
+        Map<String, List<String>> response = new HashMap<>();
+        response.put("dateList", excludedDates);
 
         return ResponseEntity.ok(response);
     }
@@ -201,19 +198,19 @@ public class RoomService {
 
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), changeLocalStartRequestDTO.getRoomId());
 
-        RoomEntity roomEntity = roomRepository.findById(changeLocalStartRequestDTO.getRoomId()).orElseThrow(()->new NoSuchElementException("존재하지 않는 방"));
+        RoomEntity roomEntity = roomRepository.findById(changeLocalStartRequestDTO.getRoomId()).orElseThrow(() -> new NoSuchElementException("존재하지 않는 방"));
         // 여기서 방의 유저가 아니면 빠꾸 시켜야 함
-        ParticipantEntity participant = participantRepository.findById(id).orElseThrow(()->new NoSuchElementException("방에 없는 사람"));
+        ParticipantEntity participant = participantRepository.findById(id).orElseThrow(() -> new NoSuchElementException("방에 없는 사람"));
         participant.setPoint(changeLocalStartRequestDTO.getStartPoint());
         participant.setLatitude(changeLocalStartRequestDTO.getLatitude());
         participant.setLongitude(changeLocalStartRequestDTO.getLongitude());
 
         //RecommendStation 출발지 설정 완료, 역 추천 기다리는 중
-        if(participant.getProgress()!=Processivity.RecommendStation){
+        if (participant.getProgress() != Processivity.RecommendStation) {
             participant.setProgress(Processivity.RecommendStation);
-            roomEntity.setSubmitNumber(roomEntity.getSubmitNumber()+1);
+            roomEntity.setSubmitNumber(roomEntity.getSubmitNumber() + 1);
         }
-        if(roomEntity.getNumber() == roomEntity.getSubmitNumber()){
+        if (roomEntity.getNumber() == roomEntity.getSubmitNumber()) {
             roomEntity.setProcessivity(Processivity.RecommendStation);
 
             //여기서 새로고침을 하기 위해 다른 값을 리턴해줘야 하나?
@@ -223,25 +220,23 @@ public class RoomService {
     }
 
 
-
     public ResponseEntity<Void> saveFixDate(FixDateDTO fixDateDTO) {
         //방 정보 찾아와서
-       RoomEntity room =  roomRepository.findById(fixDateDTO.getRoomId()).orElseThrow(() -> new NoSuchElementException());
+        RoomEntity room = roomRepository.findById(fixDateDTO.getRoomId()).orElseThrow(() -> new NoSuchElementException());
 
-       room.setFixDay(fixDateDTO.getDate());
-       room.setProcessivity(Processivity.SubmitStation);
-       room.setSubmitNumber(0);
+        room.setFixDay(fixDateDTO.getDate());
+        room.setProcessivity(Processivity.SubmitStation);
+        room.setSubmitNumber(0);
 
-       roomRepository.save(room);
+        roomRepository.save(room);
 
         return ResponseEntity.ok().build();
 
     }
 
-        public ResponseEntity<?> nextClick( Long roomId) {
+    public ResponseEntity<?> nextClick(Long roomId) {
         //방 정보 찾아와서
         RoomEntity roomEntity = roomRepository.findById(roomId).get();
-        
 
 
         Processivity processivity = roomEntity.getProcessivity();
@@ -251,7 +246,7 @@ public class RoomService {
 
         nextProcessivity = nextProcess(processivity, roomEntity, participantList);
 
-        changeParticipantsProcess(participantList,nextProcessivity);
+        changeParticipantsProcess(participantList, nextProcessivity);
 
         roomEntity.setProcessivity(nextProcessivity);
 
@@ -262,55 +257,46 @@ public class RoomService {
         return ResponseEntity.ok("Next");
     }
 
-    public boolean recommendDay(RoomEntity roomEntity,List<ParticipantEntity> participantList){
+    public boolean recommendDay(RoomEntity roomEntity, List<ParticipantEntity> participantList) {
 
 
-            List<Long> userIdList = participantList.stream()
-                    .map(participant -> participant.getUser().getId())
-                    .collect(Collectors.toList());
+        List<Long> userIdList = participantList.stream()
+                .map(participant -> participant.getUser().getId())
+                .collect(Collectors.toList());
 
-            List<LocalDate> impossibleDates = fixCalendarRepository.findByUserList(userIdList);
-
-
+        List<LocalDate> impossibleDates = fixCalendarRepository.findByUserList(userIdList);
 
 
-            // 가능한 날짜를 찾아내는 방법:
-            List<LocalDate> possibleDates = IntStream.range(0, roomEntity.getPeriodEnd().getDayOfYear() - roomEntity.getPeriodStart().getDayOfYear() + 1)
-                    .mapToObj(roomEntity.getPeriodStart()::plusDays)
-                    .filter(date -> !impossibleDates.contains(date))
-                    .collect(Collectors.toList());
+        // 가능한 날짜를 찾아내는 방법:
+        List<LocalDate> possibleDates = IntStream.range(0, roomEntity.getPeriodEnd().getDayOfYear() - roomEntity.getPeriodStart().getDayOfYear() + 1)
+                .mapToObj(roomEntity.getPeriodStart()::plusDays)
+                .filter(date -> !impossibleDates.contains(date))
+                .collect(Collectors.toList());
 
-            if(possibleDates.size()==0){
-                return false;
-            }
-            roomEntity.setFixDay(possibleDates.get(0));
+        if (possibleDates.size() == 0) {
+            return false;
+        }
+        roomEntity.setFixDay(possibleDates.get(0));
 
-            return true;
+        return true;
     }
-    public Processivity nextProcess(Processivity process , RoomEntity roomEntity,List<ParticipantEntity> participantList){
+
+    public Processivity nextProcess(Processivity process, RoomEntity roomEntity, List<ParticipantEntity> participantList) {
 
         /**
          * 여기서 방의 기존 진행도에 따라서 api요청을 통해서 fix된 장소와 날짜 역 등을 db에저장
          */
         Processivity next = process;
 
-        if(process == Processivity.InSubmission){
+        if (process == Processivity.InSubmission) {
             next = Processivity.RecommendDay;
-        }
-        else if(process == Processivity.RecommendDay) {
+        } else if (process == Processivity.RecommendDay) {
             next = Processivity.SubmitStation;
-        }
-
-        else if(process == Processivity.SubmitStation){
+        } else if (process == Processivity.SubmitStation) {
             next = Processivity.RecommendStation;
-        }
-
-
-        else if(process == Processivity.RecommendStation) {
+        } else if (process == Processivity.RecommendStation) {
             next = Processivity.RecommendPlace;
-        }
-
-        else if(process == Processivity.RecommendPlace) {
+        } else if (process == Processivity.RecommendPlace) {
             next = Processivity.Fix;
         }
 
@@ -319,14 +305,25 @@ public class RoomService {
 
     }
 
-    public void changeParticipantsProcess(List<ParticipantEntity> memberList , Processivity process){
+    public void changeParticipantsProcess(List<ParticipantEntity> memberList, Processivity process) {
 
-        for(ParticipantEntity participant :memberList ){
+        for (ParticipantEntity participant : memberList) {
             participant.setProgress(process);
         }
 
     }
 
+    public ResponseEntity<Void> changeName(UserEntity user, NameChangeDTO nameChangeDTO) {
+
+        try {
+            ParticipantEntity participant = participantRepository.findByIdUserIdAndIdRoomId(user.getId(), nameChangeDTO.getRoomId());
+            participant.setRoomName(nameChangeDTO.getEditedTitle());
+        }
+        catch(Exception e){
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok().build();
+    }
 
 
 }

@@ -1,11 +1,13 @@
 package yeoksamstationexit1.usermanage.route.dto.request.place;
 
+import lombok.Data;
+import lombok.ToString;
+
 import java.util.List;
 
-public class FixStationAndRoomId {
-
-    private long roomId;
-
+@Data
+@ToString
+public class FixStationDTO {
 
     private int station_id;
 

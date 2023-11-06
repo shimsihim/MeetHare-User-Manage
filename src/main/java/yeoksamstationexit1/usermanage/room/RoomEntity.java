@@ -51,8 +51,8 @@ public class RoomEntity {
 
     public RoomEntity(CreateRoomDTO dto) {
         this.category = dto.getCategory();
-        this.periodStart = dto.getStartDate();
-        this.periodEnd = dto.getEndDate();
+        this.periodStart = dto.getStart();
+        this.periodEnd = dto.getEnd();
         this.processivity = Processivity.InSubmission;
         this.roomName = dto.getRoomName();
     }

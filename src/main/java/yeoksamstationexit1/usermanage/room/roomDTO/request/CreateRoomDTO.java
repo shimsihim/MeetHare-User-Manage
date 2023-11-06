@@ -7,13 +7,14 @@ import yeoksamstationexit1.usermanage.room.enumClass.Category;
 import java.time.LocalDate;
 
 @Data
+@ToString
 public class CreateRoomDTO {
 
     private String roomName;
 
     private Category category;
 
-    private LocalDate startDate;
+    private LocalDate start;
 
-    private LocalDate endDate;
+    private LocalDate end;
 }
