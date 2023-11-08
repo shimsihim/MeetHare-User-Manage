@@ -7,7 +7,7 @@ import lombok.ToString;
 @ToString
 public class NameChangeDTO {
 
-    private long roomId;
+    private String uuid;
     private String editedTitle;
 
 }

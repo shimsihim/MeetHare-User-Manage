@@ -39,9 +39,9 @@ public class RoomGetInService {
 
 
     //일단 방의 진행도를 보고 insubmission상태가 아니면 다시 보내기
-    public ResponseEntity<?> getIn(UserEntity existUser, Long roomId) {
+    public ResponseEntity<?> getIn(UserEntity existUser, String uuid) {
 
-
+        System.out.println("uuid" + "  " + uuid);
         /** To do
          * 조인을 통해서 repository의 접근 줄이기
          * InSubmissiondl 이 아니면 굳이 나눌 필요 없이 일단 다 보내주고
@@ -52,13 +52,14 @@ public class RoomGetInService {
         //
 
         //방 정보와 방의 진행도 가져오기
-        Optional<RoomEntity> roomEntityOp = roomRepository.findById(roomId);
+        Optional<RoomEntity> roomEntityOp = roomRepository.findByUUID(uuid);
         RoomEntity roomEntity;
         if(roomEntityOp.isPresent()){
             roomEntity = roomEntityOp.get();
         }
         //방 없으면 nocontent
         else{
+            System.out.println("왜없니");
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
 
@@ -77,15 +78,13 @@ public class RoomGetInService {
                 .fixPlace(roomEntity.getFixPlace())
                 .master(roomEntity.getMaster())
                 .number(roomEntity.getNumber())
+                .roomId(roomEntity.getRoomId())
                 .build();
 
         //방의 참가자 목록 받기
-        List<ParticipantEntity> memberList = participantRepository.findByIdRoomId(roomId).get();
+        List<ParticipantEntity> memberList = participantRepository.findByIdRoomId(roomEntity.getRoomId()).get();
 
-        System.out.println("test");
-        System.out.println(memberList.get(0).getUser().getId());
 
-        System.out.println("test end");
 
 
         List<ParticipantDTO> memberDtoList = memberList.stream()
@@ -99,7 +98,7 @@ public class RoomGetInService {
         //나의 방정보 가져오기
 
 
-        ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), roomId);
+        ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), roomEntity.getRoomId());
         Optional<ParticipantEntity> participantOp = participantRepository.findById(id);
         ParticipantEntity participantEntity;
 

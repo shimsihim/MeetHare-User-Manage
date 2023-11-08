@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class RoomListDTO {
 
-    private Long roomId;
+    private String UUID;
     private String roomName;
 
 }

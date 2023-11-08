@@ -19,3 +19,15 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+
+
+jwt:
+  # 다음 명령어를 터미널에서 실행하여 생성할 수 있음 : `openssl rand -hex 64`
+  secretKey: "669629e79bec9fdc11391e28bb7232c80660499499add816f4ae3ff1a5c10a1aa4fffa0b725957934271e1c54a061e2f2956ebba3727aa7aa7a3fee8c6480a97" # Base64로 인코딩된 암호 키, HS512를 사용할 것이기 때문에, 64바이트 이상이 되어야 함
+  access:
+    #    expiration: 3600000 # 1ms 기준, 보편적으로 1시간 부여
+    expiration: 1209600000 # test용으로 2주 부여
+    header: Authorization
+  refresh:
+    expiration: 1209600000 #  1ms 기준, 보편적으로 2주 부여
+    header: Authorization-refresh
