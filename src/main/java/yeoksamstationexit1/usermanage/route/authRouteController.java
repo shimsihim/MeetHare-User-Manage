@@ -29,7 +29,7 @@ import java.util.Optional;
 
 
 @RequiredArgsConstructor
-@RequestMapping("/auth")
+@RequestMapping("/user-manage/tunnel")
 @RestController
 @Tag(name = "추천", description = "추천을 위한 단순 인증 관련 API 입니다.")
 public class authRouteController {

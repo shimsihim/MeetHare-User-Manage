@@ -15,7 +15,7 @@ import java.text.ParseException;
 import java.util.List;
 
 @RequiredArgsConstructor
-@RequestMapping("api/user")
+@RequestMapping("/user-manage/user")
 @RestController
 @Tag(name = "유저", description = "유저 관련 API 입니다.")
 public class UserController {
