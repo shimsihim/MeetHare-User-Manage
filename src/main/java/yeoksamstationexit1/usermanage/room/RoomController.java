@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
-@RequestMapping("api/room")
+@RequestMapping("/user-manage/user")
 @RestController
 @Tag(name = "약속방", description = "약속방 관련 API 입니다.")
 public class RoomController {
