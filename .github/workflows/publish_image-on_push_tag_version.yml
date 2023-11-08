@@ -28,6 +28,12 @@ jobs:
           java-version: "11"
           cache: "gradle"
 
+      - name: Set YML
+        run: |
+          mkdir -p src/main/resources
+          echo "${{ secrets.YML_FILE }}" | base64 --decode > src/main/resources/application.yml
+          find src
+
       # Gradle Dependency 캐싱
       - name: Gradle Caching
         uses: actions/cache@v3
