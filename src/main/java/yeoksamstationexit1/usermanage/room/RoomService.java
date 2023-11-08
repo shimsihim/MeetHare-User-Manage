@@ -4,33 +4,24 @@ package yeoksamstationexit1.usermanage.room;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import yeoksamstationexit1.usermanage.exception.NotInRoomException;
 import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEmbededId;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEntity;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantRepository;
 import yeoksamstationexit1.usermanage.room.roomDTO.request.*;
-import yeoksamstationexit1.usermanage.room.roomDTO.response.PlaceResponseDTO;
 import yeoksamstationexit1.usermanage.room.roomDTO.response.RoomListDTO;
-import yeoksamstationexit1.usermanage.room.roomDTO.response.StationDTO;
 import yeoksamstationexit1.usermanage.user.UserEntity;
 import yeoksamstationexit1.usermanage.user.UserRepository;
 import yeoksamstationexit1.usermanage.user.entity.FixCalendarEntity;
 import yeoksamstationexit1.usermanage.user.entity.FixCalendertId;
 import yeoksamstationexit1.usermanage.user.repository.FixCalendarRepository;
 
-import javax.servlet.http.HttpServletResponse;
-import java.net.URI;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,12 +42,11 @@ public class RoomService {
 
 
     //방 등록
-    public Long registRoom(UserEntity existUser, CreateRoomDTO createRoomDTO) {
+    public String registRoom(UserEntity existUser, CreateRoomDTO createRoomDTO) {
 
 
-        RoomEntity room = new RoomEntity(createRoomDTO);
-        room.setMaster(existUser.getEmail());
-        room.setNumber(1);
+        RoomEntity room = new RoomEntity(createRoomDTO,existUser.getEmail(),UUID.randomUUID().toString());
+
         roomRepository.save(room);
 
         ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), room.getRoomId());
@@ -74,7 +64,7 @@ public class RoomService {
 
 
         participantRepository.save(participantEntity);
-        return room.getRoomId();
+        return room.getUUID();
 
     }
 
@@ -85,7 +75,7 @@ public class RoomService {
         List<RoomListDTO> roomList = participateList.stream()
                 .map(participant -> {
                     RoomListDTO roomListDTO = new RoomListDTO();
-                    roomListDTO.setRoomId(participant.getRoom().getRoomId());
+                    roomListDTO.setUUID(participant.getRoom().getUUID());
                     roomListDTO.setRoomName(participant.getRoomName()); // ParticipantEntity에서 roomName 가져오기
                     return roomListDTO;
                 })
@@ -141,7 +131,7 @@ public class RoomService {
 
 
         //아직 제출하지 않은 경우 방 내의 제추자수 +1 과 나의 진행도 +1
-        ParticipantEntity participantEntity = participantRepository.findByIdUserIdAndIdRoomId(existUser.getId(), dayList.getRoomId());
+        ParticipantEntity participantEntity = participantRepository.findByIdUserIdAndIdRoomId(existUser.getId(), dayList.getRoomId()).get();
 
         if (participantEntity.getProgress() != Processivity.RecommendDay) {
             RoomEntity roomEntity = roomRepository.findById(dayList.getRoomId()).get();
@@ -315,14 +305,43 @@ public class RoomService {
 
     public ResponseEntity<Void> changeName(UserEntity user, NameChangeDTO nameChangeDTO) {
 
-        try {
-            ParticipantEntity participant = participantRepository.findByIdUserIdAndIdRoomId(user.getId(), nameChangeDTO.getRoomId());
-            participant.setRoomName(nameChangeDTO.getEditedTitle());
-        }
-        catch(Exception e){
-            return ResponseEntity.notFound().build();
-        }
+
+//        Optional<ParticipantEntity> participantOp = participantRepository.findByIdUserIdAndIdRoomId(user.getId(), nameChangeDTO.getRoomId());
+//
+//        if(participantOp.isPresent()){
+//            participantOp.get().setRoomName(nameChangeDTO.getEditedTitle());
+//            return ResponseEntity.ok().build();
+//        }
+//        else{
+//
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        }
+
+        ParticipantEntity participant = participantRepository.findByIdUserIdAndIdUUID(user.getId(), nameChangeDTO.getUuid())
+                .orElseThrow(()-> new NotInRoomException("방에 참여하지 않은 사용자의 접근입니다"));
+
+
+        participant.setRoomName(nameChangeDTO.getEditedTitle());
+
         return ResponseEntity.ok().build();
+
+
+
+
+    }
+
+    public class UUIDgeneration {
+        public String getUUID() {
+
+            //UUID 생성
+            String uuid = UUID.randomUUID().toString();
+            System.out.println(uuid);
+
+            // "-" 하이픈 제외
+            uuid = uuid.replace("-", "");
+            System.out.println(uuid);
+            return uuid;
+        }
     }
 
 

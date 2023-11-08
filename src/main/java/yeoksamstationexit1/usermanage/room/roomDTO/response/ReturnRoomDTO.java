@@ -15,6 +15,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ReturnRoomDTO {//방입장시 기본 정보들
 
+    private long roomId;
+
     private Category category;
     private Processivity processivity; // 방의 진행상황
 

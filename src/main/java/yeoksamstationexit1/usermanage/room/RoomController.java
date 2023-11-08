@@ -29,9 +29,9 @@ public class RoomController {
     @Operation(description = "방 등록 메서드입니다.")
     @PostMapping()
     public ResponseEntity<?> createRoom(@AuthenticationPrincipal UserEntity user, @RequestBody CreateRoomDTO createRoomDTO) throws Exception {
-        Long roomId = roomService.registRoom(user, createRoomDTO);
+        String uuid = roomService.registRoom(user, createRoomDTO);
         // roomId를 ResponseEntity에 추가하여 응답
-        return new ResponseEntity<>(roomId, HttpStatus.OK);
+        return new ResponseEntity<>(uuid, HttpStatus.OK);
 //        return ResponseEntity.status(HttpStatus.OK).body(roomId);
     }
 
@@ -43,12 +43,12 @@ public class RoomController {
 
     //기존 방에 입장한 인원이면 방에 입장한 인원정보와 roomId 반환
     // 처음 입장 시 participant등록 후 본인의 기간 내의 불가능한 날짜 반환. -> 프론트에서 다시 방의 기간 내에 불가능한 시간 받기
-    @GetMapping("/enter/{roomId}")
-    public ResponseEntity<?> enterRoom(@AuthenticationPrincipal UserEntity user,@PathVariable(value = "roomId") Long roomId) throws Exception {
+    @GetMapping("/enter/{uuid}")
+    public ResponseEntity<?> enterRoom(@AuthenticationPrincipal UserEntity user,@PathVariable(value = "uuid") String uuid) throws Exception {
         if(user == null){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("로그인이 필요합니다");
         }
-        ResponseEntity<?> status  =  roomGetInService.getIn(user,roomId);
+        ResponseEntity<?> status  =  roomGetInService.getIn(user,uuid);
 
         return status;
     }
@@ -102,11 +102,11 @@ public class RoomController {
     }
 
     @PostMapping("/nameChange") // 해당 방의 이름 변경
-    public ResponseEntity<?> nameChange(@AuthenticationPrincipal UserEntity user,@RequestBody NameChangeDTO nameChangeDTO){
+    public ResponseEntity<Void> nameChange(@AuthenticationPrincipal UserEntity user,@RequestBody NameChangeDTO nameChangeDTO){
         //개인의 특정 방의 출발지 변경
         ResponseEntity<Void> response = roomService.changeName(user,nameChangeDTO);
 
-        return null;
+        return response;
     }
 
 

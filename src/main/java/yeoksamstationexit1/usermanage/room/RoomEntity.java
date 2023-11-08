@@ -30,7 +30,7 @@ public class RoomEntity {
     @Enumerated(EnumType.STRING)
     private Processivity processivity; // 방의 진행상황
 
-    private int number;
+    private int number =1;
 
     private String master;
 
@@ -49,11 +49,15 @@ public class RoomEntity {
 
     private String roomName;
 
-    public RoomEntity(CreateRoomDTO dto) {
+    private String UUID;
+
+    public RoomEntity(CreateRoomDTO dto ,String master, String UUID ) {
         this.category = dto.getCategory();
         this.periodStart = dto.getStart();
         this.periodEnd = dto.getEnd();
         this.processivity = Processivity.InSubmission;
         this.roomName = dto.getRoomName();
+        this.master = master;
+        this.UUID = UUID;
     }
 }
