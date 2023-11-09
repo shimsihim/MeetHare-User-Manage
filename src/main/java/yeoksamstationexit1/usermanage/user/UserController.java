@@ -9,7 +9,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
-import yeoksamstationexit1.usermanage.user.dto.dayCalendarDTO;
 
 import java.text.ParseException;
 import java.util.List;
@@ -40,53 +39,6 @@ public class UserController {
         return ResponseEntity.ok("회원가입 성공!");
     }
 
-    @Operation(description = "유저 정보 수정 메서드입니다.")
-    @PutMapping()
-    public ResponseEntity<UserEntity> updateUser(@AuthenticationPrincipal UserDetails token,
-                                                 @RequestBody UserUpdateDTO updateData) throws ParseException {
-
-
-        UserEntity updatedUser = userService.updateUserInfo(token, updateData);
-
-        if (!ObjectUtils.isEmpty(updatedUser)) {
-
-            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-
-        } else {
-
-            return new ResponseEntity<>(updatedUser, HttpStatus.NOT_FOUND);
-        }
-    }
-
-
-
-//    @Operation(description = "유저 고정일정 등록 메서드.")
-//    @PostMapping("/fixcalendar")
-//    public ResponseEntity<Void> setFixCalendar(@AuthenticationPrincipal UserDetails token,
-//                                               @RequestBody dayCalendarDTO daycalendardto) throws ParseException {
-//
-//        System.out.println(daycalendardto.toString());
-//        HttpStatus status = userService.setCalendar(token, daycalendardto);
-//
-//
-//
-//        return new ResponseEntity<>(status);
-//
-//    }
-
-    /**
-     * Member List 조회
-     *
-     * @return
-     */
-    @Operation(description = "유저 전체 조회 메서드입니다.")
-    @GetMapping()
-    public ResponseEntity<List<UserEntity>> getUsers() {
-
-        List<UserEntity> users = userService.getUsers();
-
-        return new ResponseEntity<>(users, HttpStatus.OK);
-    }
 
     /**
      * Id에 해당하는 Member 조회
@@ -103,18 +55,4 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
-    /**
-     * Id에 해당하는 Member 삭제
-     *
-     * @param id
-     * @return
-     */
-    @Operation(description = "특정 유저 제거 메서드입니다.")
-    @DeleteMapping("{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable("id") String id) {
-
-        userService.deleteUser(id);
-
-        return new ResponseEntity<>(id, HttpStatus.OK);
-    }
 }
