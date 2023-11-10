@@ -36,95 +36,14 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String accessToken = jwtService.createAccessToken(oAuth2User.getEmail());
 
-        Cookie cookie = new Cookie("domainPsX", accessToken);
-        cookie.setPath("/");    // 쿠키 경로
-        cookie.setDomain("meethare.site");
-//        cookie.setHttpOnly(true); // HTTP Only 설정 (보안을 위해)
-//        cookie.setSecure(true);
-
-
-        Cookie cookie2 = new Cookie("domainPsO", accessToken);
-        cookie2.setPath("/");    // 쿠키 경로
-        cookie2.setDomain("meethare.site");
-//        cookie.setHttpOnly(true); // HTTP Only 설정 (보안을 위해)
-        cookie2.setSecure(true);
-
-        Cookie cookie3 = new Cookie("domainXPsO", accessToken);
-        cookie3.setPath("/");    // 쿠키 경로
-//        cookie.setDomain("meethare.site");
-//        cookie.setHttpOnly(true); // HTTP Only 설정 (보안을 위해)
-        cookie3.setSecure(true);
-
-        Cookie cookie4 = new Cookie("domainXPsX", accessToken);
-        cookie4.setPath("/");    // 쿠키 경로
-//        cookie.setDomain("meethare.site");
-//        cookie.setHttpOnly(true); // HTTP Only 설정 (보안을 위해)
-//        cookie.setSecure(true);
-
-        ResponseCookie cookie5 = ResponseCookie.from("ResponseCookieSameDomainSecure", accessToken)
+        ResponseCookie cookie = ResponseCookie.from("Bearer", accessToken)
                 .path("/")
-                .sameSite("None")
-                .secure(false)
+                .secure(true)
                 .domain("meethare.site")
                 .build();
 
-        ResponseCookie cookie6 = ResponseCookie.from("ResponseCookieSameDomainSecureX", accessToken)
-                .path("/")
-                .sameSite("None")
-                .domain("meethare.site")
-                .build();
 
-        ResponseCookie cookie7 = ResponseCookie.from("ResponseCookieSameDomainXSecure", accessToken)
-                .path("/")
-                .sameSite("None")
-                .secure(false)
-                .build();
-
-        ResponseCookie cookie8 = ResponseCookie.from("ResponseCookieSameXDomainSecure", accessToken)
-                .path("/")
-                .secure(false)
-                .domain("meethare.site")
-                .build();
-
-        ResponseCookie cookie9 = ResponseCookie.from("ResponseCookieSameDomainXSecureX", accessToken)
-                .path("/")
-                .sameSite("None")
-                .build();
-
-        ResponseCookie cookie10 = ResponseCookie.from("ResponseCookieSameXDomainSecureX", accessToken)
-                .path("/")
-                .domain("meethare.site")
-                .build();
-
-        ResponseCookie cookie11 = ResponseCookie.from("ResponseCookieSameXDomainXSecure", accessToken)
-                .path("/")
-                .secure(false)
-                .build();
-
-        ResponseCookie cookie12 = ResponseCookie.from("ResponseCookieSameXDomainXSecureX", accessToken)
-                .path("/")
-                .build();
-
-
-        // 응답 헤더에 쿠키 추가
-        response.addCookie(cookie);
-        response.addCookie(cookie2);
-        response.addCookie(cookie3);
-        response.addCookie(cookie4);
-
-
-//        response.addHeader("Set-Cookie", cookie.toString());
-//        response.addHeader("Set-Cookie", cookie2.toString());
-//        response.addHeader("Set-Cookie", cookie3.toString());
-//        response.addHeader("Set-Cookie", cookie4.toString());
-        response.addHeader("Set-Cookie", cookie5.toString());
-        response.addHeader("Set-Cookie", cookie6.toString());
-        response.addHeader("Set-Cookie", cookie7.toString());
-        response.addHeader("Set-Cookie", cookie8.toString());
-        response.addHeader("Set-Cookie", cookie9.toString());
-        response.addHeader("Set-Cookie", cookie10.toString());
-        response.addHeader("Set-Cookie", cookie11.toString());
-        response.addHeader("Set-Cookie", cookie12.toString());
+        response.addHeader("Set-Cookie", cookie.toString());
 
         response.addHeader(jwtService.getAccessHeader(), "Bearer " + accessToken);
 
