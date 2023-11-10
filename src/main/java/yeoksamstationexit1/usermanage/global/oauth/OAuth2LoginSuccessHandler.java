@@ -42,7 +42,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 .domain("meethare.site")
                 .build();
 
-
+        System.out.println(request.getHeader("Referer"));
+        log.info(request.getHeader("Referer"));
         response.addHeader("Set-Cookie", cookie.toString());
 
         response.addHeader(jwtService.getAccessHeader(), "Bearer " + accessToken);
