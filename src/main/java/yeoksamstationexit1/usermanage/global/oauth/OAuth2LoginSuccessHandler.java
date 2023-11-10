@@ -36,33 +36,39 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String accessToken = jwtService.createAccessToken(oAuth2User.getEmail());
 
-        ResponseCookie cookie = ResponseCookie.from("Bearer", accessToken)
-                .path("/")
-                .secure(true)
-                .domain("meethare.site")
-                .build();
-
-        System.out.println(request.getHeader("Referer"));
-        log.info(request.getHeader("Referer"));
-        response.addHeader("Set-Cookie", cookie.toString());
-
-        response.addHeader(jwtService.getAccessHeader(), "Bearer " + accessToken);
 
 
-        response.sendRedirect(request.getHeader("Referer")); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
+        String referer = request.getHeader("Referer");
+        log.info("referer : "+ referer);
+        
+        if (referer.equals("http://localhost:3000/") ) {
 
-//        jwtService.sendAccessAndRefreshToken(response, accessToken, null);
-        // Role을 Guest에서 User로
-        // UserEntity findUser = userRepository.findByEmail(oAuth2User.getEmail())
-        // .orElseThrow(() -> new IllegalArgumentException("이메일에 해당하는 유저가 없습니다."));
-        // findUser.authorizeUser();
+          ResponseCookie cookie = ResponseCookie.from("Bearer", accessToken)
+                  .path("/")
+                  .build();
+
+          response.addHeader("Set-Cookie", cookie.toString());
+          response.sendRedirect("referer"); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
+        }
+        else{
+
+
+          ResponseCookie cookie = ResponseCookie.from("Bearer", accessToken)
+                  .path("/")
+                  .secure(true)
+                  .domain("meethare.site")
+                  .build();
+
+          response.addHeader("Set-Cookie", cookie.toString());
+          response.sendRedirect("https://meethare.site/");
+        }
       } else {
 
         loginSuccess(response, oAuth2User); // 로그인에 성공한 경우 access, refresh 토큰 생성
       }
     } catch (Exception e) {
 
-      throw e;
+      log.info(e.toString());
     }
 
   }
