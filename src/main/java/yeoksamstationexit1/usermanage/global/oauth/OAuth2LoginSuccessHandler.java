@@ -45,6 +45,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
           ResponseCookie cookie = ResponseCookie.from("Bearer", accessToken)
                   .path("/")
+                  .domain("localhost:3000")
                   .build();
 
           response.addHeader("Set-Cookie", cookie.toString());

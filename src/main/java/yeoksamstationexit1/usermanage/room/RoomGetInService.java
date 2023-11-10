@@ -123,6 +123,7 @@ public class RoomGetInService {
             List<String> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId(),roomEntity.getPeriodStart(),roomEntity.getPeriodEnd());
 
             Map<String, Object> response = new HashMap<>();
+            response.put("userId",existUser.getId());
             response.put("memberList", memberDtoList);
             response.put("fixCalendarList", myImpossibleList);
             response.put("roominfo", returnRoom);
@@ -146,6 +147,7 @@ public class RoomGetInService {
 
             //여기는 fixCalendarList가 없음 왜냐면 다음 분기마다 다 다른 정보 필요
             Map<String, Object> response = new HashMap<>();
+            response.put("userId",existUser.getId());
             response.put("memberList", memberDtoList);
             response.put("roominfo", returnRoom);
             response.put("myProgress", participantEntity.getProgress());
