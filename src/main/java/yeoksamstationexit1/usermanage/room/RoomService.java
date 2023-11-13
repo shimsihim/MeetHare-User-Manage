@@ -322,14 +322,14 @@ public class RoomService {
 
     }
     public ResponseEntity<Void> setStation(UserEntity user, SetStationDTO setStationDTO) {
-        System.out.println(123);
-        System.out.println(setStationDTO.toString());
+
         RoomEntity room = roomRepository.findById(setStationDTO.getRoomId()).orElseThrow(()->new NoSuchElementException());
-        System.out.println(123);
         room.setFixStation(setStationDTO.getStation());
 
         return ResponseEntity.ok().build();
     }
+
+    
     public ResponseEntity<Void> setPlace(UserEntity user, SetPlaceDTO setPlaceDTO) {
 
         RoomEntity room = roomRepository.findById(setPlaceDTO.getRoomId()).orElseThrow(()->new NoSuchElementException());
