@@ -325,6 +325,7 @@ public class RoomService {
 
         RoomEntity room = roomRepository.findById(setStationDTO.getRoomId()).orElseThrow(()->new NoSuchElementException());
         room.setFixStation(setStationDTO.getStation());
+        room.setProcessivity(Processivity.RecommendPlace);
 
         return ResponseEntity.ok().build();
     }
@@ -334,6 +335,7 @@ public class RoomService {
 
         RoomEntity room = roomRepository.findById(setPlaceDTO.getRoomId()).orElseThrow(()->new NoSuchElementException());
         room.setFixPlace(setPlaceDTO.getPlace());
+        room.setProcessivity(Processivity.Fix);
 
         return ResponseEntity.ok().build();
     }
