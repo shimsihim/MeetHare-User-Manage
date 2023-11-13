@@ -2,6 +2,8 @@ package yeoksamstationexit1.usermanage.global.oauth;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -9,6 +11,8 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import yeoksamstationexit1.usermanage.user.SocialType;
@@ -25,6 +29,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private final UserRepository userRepository;
     private final WebClient webClient;
+
+
 
     // Google은 Spring Security에 기본 구현체 존재
     private static final String NAVER = "naver";
@@ -90,14 +96,25 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         UserEntity findUser = userRepository.findBySocialTypeAndSocialId(socialType,
                 attributes.getOauth2UserInfo().getId()).orElse(null);
 
+
+
+
         if (findUser == null) {
             UserEntity saveUserEntity = saveUser(attributes, socialType);
-            String json = String.format("{\"userId\": %d}", saveUserEntity.getId());
-//      Mono<String>  response = webClient.post()
-//              .uri("/place/priority")
-//              .bodyValue(json)
-//              .retrieve()
-//              .bodyToMono(String.class);
+            String json = String.format("{\"user_id\": %d}", saveUserEntity.getId());
+
+            Mono<ClientResponse> responseMono = webClient.post()
+                    .uri("/place/priority")
+                    .bodyValue(json)
+                    .exchange(); // exchange 메서드를 사용하여 ClientResponse 객체를 얻음
+
+            responseMono.subscribe(response -> {
+                HttpStatus statusCode = response.statusCode();
+                Mono<String> responseBodyMono = response.bodyToMono(String.class);
+                responseBodyMono.subscribe(responseBody -> {
+                    log.info("Response Body: " + responseBody +" statusCode : "+ statusCode);
+                });
+            });
             return saveUserEntity;
         }
         return findUser;

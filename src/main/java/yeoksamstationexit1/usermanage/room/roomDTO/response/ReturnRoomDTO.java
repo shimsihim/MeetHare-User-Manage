@@ -24,7 +24,7 @@ public class ReturnRoomDTO {//방입장시 기본 정보들
 
     private String fixPlace; // 만날 장소
 
-    private String fixStation; // 만날 장소
+    private int fixStation; // 만날 장소
 
     private int submitNumber; // 시간과 장소 제출 인원
 
