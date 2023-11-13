@@ -71,16 +71,18 @@ public class RoomService {
     public ResponseEntity<?> findPersonalRoom(UserEntity existUser) {
 
 
-        List<ParticipantEntity> participateList = participantRepository.findByIdUserId(existUser.getId());
-        List<RoomListDTO> roomList = participateList.stream()
-                .map(participant -> {
-                    RoomListDTO roomListDTO = new RoomListDTO();
-                    roomListDTO.setUUID(participant.getRoom().getUUID());
-                    roomListDTO.setRoomName(participant.getRoomName()); // ParticipantEntity에서 roomName 가져오기
-                    return roomListDTO;
-                })
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(roomList);
+            List<ParticipantEntity> participateList = participantRepository.findByIdUserId(existUser.getId());
+            List<RoomListDTO> roomList = participateList.stream()
+                    .map(participant -> {
+                        RoomListDTO roomListDTO = new RoomListDTO();
+                        roomListDTO.setUUID(participant.getRoom().getUUID());
+                        roomListDTO.setRoomName(participant.getRoomName()); // ParticipantEntity에서 roomName 가져오기
+                        return roomListDTO;
+                    })
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(roomList);
+
+
     }
 
 
@@ -306,19 +308,9 @@ public class RoomService {
     public ResponseEntity<Void> changeName(UserEntity user, NameChangeDTO nameChangeDTO) {
 
 
-//        Optional<ParticipantEntity> participantOp = participantRepository.findByIdUserIdAndIdRoomId(user.getId(), nameChangeDTO.getRoomId());
-//
-//        if(participantOp.isPresent()){
-//            participantOp.get().setRoomName(nameChangeDTO.getEditedTitle());
-//            return ResponseEntity.ok().build();
-//        }
-//        else{
-//
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-//        }
 
         ParticipantEntity participant = participantRepository.findByIdUserIdAndIdUUID(user.getId(), nameChangeDTO.getUuid())
-                .orElseThrow(()-> new NotInRoomException("방에 참여하지 않은 사용자의 접근입니다"));
+                .orElseThrow(()-> new NotInRoomException("해당 방에 존재하는 유저를 찾을 수 없습니다"));
 
 
         participant.setRoomName(nameChangeDTO.getEditedTitle());
@@ -329,6 +321,24 @@ public class RoomService {
 
 
     }
+    public ResponseEntity<Void> setStation(UserEntity user, SetStationDTO setStationDTO) {
+        System.out.println(123);
+        System.out.println(setStationDTO.toString());
+        RoomEntity room = roomRepository.findById(setStationDTO.getRoomId()).orElseThrow(()->new NoSuchElementException());
+        System.out.println(123);
+        room.setFixStation(setStationDTO.getStation());
+
+        return ResponseEntity.ok().build();
+    }
+    public ResponseEntity<Void> setPlace(UserEntity user, SetPlaceDTO setPlaceDTO) {
+
+        RoomEntity room = roomRepository.findById(setPlaceDTO.getRoomId()).orElseThrow(()->new NoSuchElementException());
+        room.setFixPlace(setPlaceDTO.getPlace());
+
+        return ResponseEntity.ok().build();
+    }
+
+
 
     public class UUIDgeneration {
         public String getUUID() {
