@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,9 @@ public class authRouteController {
     private final ParticipantRepository participantRepository;
     private final WebClient webClient;
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @Value("${backenduri}")
+    private String backenduri;
 
     //지하철역 추천을 위한 것
     @PostMapping("/map/middlespot")

@@ -37,61 +37,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         String accessToken = jwtService.createAccessToken(oAuth2User.getEmail());
 
 
-
+        System.out.println(accessToken);
         String referer = request.getHeader("Referer");
-        log.info("referer : "+ referer);
-        
+
         if (referer.equals("http://localhost:3000/") ) {
 
-          ResponseCookie cookie = ResponseCookie.from("doseXsa", accessToken)
-                  .path("/")
-                  .domain("localhost")
-                  .secure(false)
-                  .sameSite("None")
-                  .build();
-          ResponseCookie cookie2 = ResponseCookie.from("doseXsaX", accessToken)
-                  .path("/")
-                  .domain("localhost")
-                  .secure(false)
-                  .build();
-          ResponseCookie cookie3 = ResponseCookie.from("dosesa", accessToken)
-                  .path("/")
-                  .domain("localhost")
-                  .secure(true)
-                  .sameSite("None")
-                  .build();
-          ResponseCookie cookie4 = ResponseCookie.from("dosesaX", accessToken)
-                  .path("/")
-                  .domain("localhost")
-                  .secure(true)
-                  .build();
-          ResponseCookie cookie5 = ResponseCookie.from("doXseXsa", accessToken)
-                  .path("/")
-                  .secure(false)
-                  .sameSite("None")
-                  .build();
-          ResponseCookie cookie6 = ResponseCookie.from("doXseXsaX", accessToken)
-                  .path("/")
-                  .secure(false)
-                  .build();
-          ResponseCookie cookie7 = ResponseCookie.from("doXsesa", accessToken)
-                  .path("/")
-                  .secure(true)
-                  .sameSite("None")
-                  .build();
-          ResponseCookie cookie8 = ResponseCookie.from("doXsesaX", accessToken)
-                  .path("/")
-                  .secure(true)
-                  .build();
-
-          response.addHeader("Set-Cookie", cookie.toString());
-          response.addHeader("Set-Cookie", cookie2.toString());
-          response.addHeader("Set-Cookie", cookie3.toString());
-          response.addHeader("Set-Cookie", cookie4.toString());
-          response.addHeader("Set-Cookie", cookie5.toString());
-          response.addHeader("Set-Cookie", cookie6.toString());
-          response.addHeader("Set-Cookie", cookie7.toString());
-          response.addHeader("Set-Cookie", cookie8.toString());
           response.sendRedirect(referer); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
         }
         else{
