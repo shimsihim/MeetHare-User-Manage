@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface RoomRepository extends JpaRepository<RoomEntity, Long> {
 
-
+ 
 //    @Query("SELECT r.category,r.processivity,r.submitNumber," +
 //            "r.fixDay,r.fixPlace,r.fixStation,r.periodStart,r.periodEnd, " +
 //            "p.progress,p.startpoint,p.roomName, " +
