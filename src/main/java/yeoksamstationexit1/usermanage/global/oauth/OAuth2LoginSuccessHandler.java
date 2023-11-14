@@ -42,6 +42,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         if (referer.equals("http://localhost:3000/") ) {
 
+          ResponseCookie cookie = ResponseCookie.from("Bearer", accessToken)
+                  .path("/")
+                  .secure(true)
+                  .domain("*")
+                  .build();
+
+          response.addHeader("Set-Cookie", cookie.toString());
           response.sendRedirect(referer); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
         }
         else{
