@@ -212,6 +212,7 @@ public class RoomService {
     }
 
 
+    @Transactional
     public ResponseEntity<Void> saveFixDate(FixDateDTO fixDateDTO) {
         //방 정보 찾아와서
         RoomEntity room = roomRepository.findById(fixDateDTO.getRoomId()).orElseThrow(() -> new NoSuchElementException());
@@ -219,7 +220,13 @@ public class RoomService {
         room.setFixDay(fixDateDTO.getDate());
         room.setProcessivity(Processivity.SubmitStation);
         room.setSubmitNumber(0);
+        List<ParticipantEntity> participantList = participantRepository.findByIdRoomId(fixDateDTO.getRoomId()).orElseThrow(()->new NoSuchElementException());
 
+        for(ParticipantEntity c : participantList){
+            c.setProgress(Processivity.SubmitStation);
+        }
+
+        participantRepository.saveAll(participantList);
         roomRepository.save(room);
 
         return ResponseEntity.ok().build();

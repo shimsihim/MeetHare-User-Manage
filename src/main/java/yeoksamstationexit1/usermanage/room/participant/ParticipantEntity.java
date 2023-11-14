@@ -34,7 +34,7 @@ public class ParticipantEntity {
     private UserEntity user;
 
     @Enumerated(EnumType.STRING)
-    private Processivity progress;
+    private Processivity progress = Processivity.InSubmission;
 
     @Column(nullable = true)
     private String startpoint;
