@@ -4,10 +4,12 @@ package yeoksamstationexit1.usermanage.room;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import yeoksamstationexit1.usermanage.exception.NotInRoomException;
 import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
@@ -161,13 +163,14 @@ public class RoomService {
                     .collect(Collectors.toList());
         }).orElse(Collections.emptyList());
 
+
         List<LocalDate> roomTimeList = fixCalendarRepository.findByUserListAndDateRange(userIdList, getAllTimeInRoomDTO.getPeriodStart(), getAllTimeInRoomDTO.getPeriodEnd());
 
 
-        //기간 내의 날짜 리스트 생성
-        List<LocalDate> dateList = Stream.iterate(getAllTimeInRoomDTO.getPeriodStart(), date -> date.plusDays(1))
-                .limit(getAllTimeInRoomDTO.getPeriodStart().until(getAllTimeInRoomDTO.getPeriodEnd().plusDays(1)).getDays())
-                .collect(Collectors.toList());
+        List<LocalDate> dateList = getAllTimeInRoomDTO.getPeriodStart()
+                .datesUntil(getAllTimeInRoomDTO.getPeriodEnd().plusDays(1))
+                .collect(Collectors.toCollection(ArrayList::new));
+
 
 
         List<String> excludedDates = dateList.stream()
@@ -344,6 +347,30 @@ public class RoomService {
         room.setFixPlace(setPlaceDTO.getPlace());
         room.setProcessivity(Processivity.Fix);
 
+        List<ParticipantEntity> memberList = participantRepository.findByIdRoomId(room.getRoomId())
+                .orElseThrow(()-> new NoSuchElementException("방에 속한 사람이 없음"));
+
+        Map<String,Object> req = new HashMap<>();
+        req.put("fixDate",room.getFixDay());
+        req.put("roomId",room.getRoomId());
+        req.put("memberList",memberList.stream()
+                .map((participant) -> participant.getUser().getEmail())
+                .collect(Collectors.toList()));
+
+        Mono<Object> resp = webClient.post()
+                .uri("/reserve")
+                .bodyValue(req)
+                .retrieve()
+                .bodyToMono(Object.class);
+
+        resp.map(response -> new ResponseEntity<>(response, HttpStatus.OK))
+                .onErrorResume(e -> {
+                    log.warn("약속확정 보내기 에러");
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+                })
+                .block();
+   
+
         return ResponseEntity.ok().build();
     }
 
@@ -354,11 +381,11 @@ public class RoomService {
 
             //UUID 생성
             String uuid = UUID.randomUUID().toString();
-            System.out.println(uuid);
+
 
             // "-" 하이픈 제외
             uuid = uuid.replace("-", "");
-            System.out.println(uuid);
+
             return uuid;
         }
     }
