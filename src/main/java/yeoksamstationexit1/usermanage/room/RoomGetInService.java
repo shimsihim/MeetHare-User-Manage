@@ -89,7 +89,7 @@ public class RoomGetInService {
 
         List<ParticipantDTO> memberDtoList = memberList.stream()
                 .map(participantEntity -> {
-                        ParticipantDTO participantDTO = new ParticipantDTO(participantEntity.getUser().getId(),participantEntity.getUser().getNickname(),participantEntity.getStartpoint(),participantEntity.getLatitude(),participantEntity.getLongitude());
+                        ParticipantDTO participantDTO = new ParticipantDTO(participantEntity.getUser().getId(),participantEntity.getUser().getNickname(),participantEntity.getStartpoint(),participantEntity.getLatitude(),participantEntity.getLongitude(),participantEntity.getProgress());
                     return participantDTO;
                 })
                 .collect(Collectors.toList());
