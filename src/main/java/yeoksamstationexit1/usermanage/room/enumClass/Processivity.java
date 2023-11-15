@@ -10,5 +10,5 @@ public enum Processivity {
     //RecommendStation : 역 추천 정보 받는 중
     //RecommendPlace : 장소 선택하는 중
     //Fix : 결정
-
+    //LiveMap : 약속 당일 실시간 지도로 보여줌
 }
