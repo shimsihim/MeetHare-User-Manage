@@ -20,13 +20,10 @@ public class webClientUtil {
         WebClient webClient = WebClient.builder()
                 .baseUrl(backenduri)
                 .defaultHeader("Content-Type", "application/json")
-                .exchangeStrategies(exchangeStrategies)
                 .build();
         return webClient;
     }
 
-    ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
-            .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024 * 50))
-            .build();
+
 
 }
