@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import yeoksamstationexit1.usermanage.global.util.ErrorHandler;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
 import yeoksamstationexit1.usermanage.room.roomDTO.request.*;
 import yeoksamstationexit1.usermanage.user.UserEntity;
@@ -24,19 +25,26 @@ public class RoomController {
 
     private final RoomService roomService;
     private final RoomGetInService roomGetInService;
+    private final ErrorHandler errorHandler;
 
 
     @Operation(description = "방 등록 메서드입니다.")
     @PostMapping()
     public ResponseEntity<?> createRoom(@AuthenticationPrincipal UserEntity user, @RequestBody CreateRoomDTO createRoomDTO) throws Exception {
-        String uuid = roomService.registRoom(user, createRoomDTO);
-        // roomId를 ResponseEntity에 추가하여 응답
-        return new ResponseEntity<>(uuid, HttpStatus.OK);
-//        return ResponseEntity.status(HttpStatus.OK).body(roomId);
+        try {
+            String uuid = roomService.registRoom(user, createRoomDTO);
+            return new ResponseEntity<>(uuid, HttpStatus.OK);
+        }
+        catch(Exception e){
+            return errorHandler.errorMessage(e);
+        }
     }
 
     @GetMapping("/findmyroom")
     public ResponseEntity<?> findMyRoom(@AuthenticationPrincipal UserEntity user){
+
+
+
         ResponseEntity<?> response =  roomService.findPersonalRoom(user);
         return response;
     }
@@ -128,10 +136,9 @@ public class RoomController {
 
 
     @PostMapping("/tolivemap")
-    public ResponseEntity<Void> tolivemap(@RequestBody RoomIdDTO roomIdDTO){
+    public ResponseEntity<Void> tolivemap(@RequestBody UUIDReqDTO uuidReqDTO){
         //개인의 특정 방의 출발지 변경
-
-        ResponseEntity response = roomService.changeToLiveMap(roomIdDTO.getRoomId());
+        ResponseEntity response = roomService.changeToLiveMap(uuidReqDTO.getRoomCode());
 
         return response;
     }

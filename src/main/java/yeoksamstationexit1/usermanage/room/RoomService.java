@@ -328,9 +328,9 @@ public class RoomService {
                     .orElseThrow(() -> new NoSuchElementException("방에 속한 사람이 없음"));
 
             Map<String, Object> req = new HashMap<>();
-            req.put("fixDate", room.getFixDay());
-            req.put("roomId", room.getRoomId());
-            req.put("memberList", memberList.stream()
+            req.put("reserveTime", room.getFixDay());
+            req.put("roomCode", room.getUUID());
+            req.put("reserveMembers", memberList.stream()
                     .map(participant -> participant.getUser().getEmail())
                     .collect(Collectors.toList()));
         try {
@@ -349,9 +349,9 @@ public class RoomService {
     }
 
 
-    public ResponseEntity<Void> changeToLiveMap(Long roomId) {
+    public ResponseEntity<Void> changeToLiveMap(String roomUUID) {
 
-        RoomEntity room = roomRepository.findById(roomId)
+        RoomEntity room = roomRepository.findByUUID(roomUUID)
                 .orElseThrow(() -> new NoSuchElementException("방을 찾을 수 없음"));
 
         room.setProcessivity(Processivity.LiveMap);
