@@ -2,7 +2,7 @@ package yeoksamstationexit1.usermanage.room.enumClass;
 
 
 public enum Processivity {
-    InSubmission,RecommendDay,SubmitStation,RecommendStation,RecommendPlace,Fix
+    InSubmission,RecommendDay,SubmitStation,RecommendStation,RecommendPlace,Fix,LiveMap
 
     //InSubmission : 나의 불가능한 날짜 넣는 중
     //RecommendDay : 방장이 날짜 리스트를 받고 이들 중 1개를 선택하는 중

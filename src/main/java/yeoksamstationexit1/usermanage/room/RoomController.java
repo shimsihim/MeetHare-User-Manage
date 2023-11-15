@@ -66,7 +66,7 @@ public class RoomController {
         //개인의 특정 방의 출발지 변경
 
 
-        ResponseEntity<Map<String, List<String>>> response = roomService.getAllImpossTime(user,getAllTimeInRoomDTO);
+        ResponseEntity<Map<String, List<String>>> response = roomService.getAllpossTime(user,getAllTimeInRoomDTO);
 
         return response;
     }
@@ -126,6 +126,15 @@ public class RoomController {
         return response;
     }
 
+
+    @PostMapping("/tolivemap")
+    public ResponseEntity<Void> tolivemap(@RequestBody RoomIdDTO roomIdDTO){
+        //개인의 특정 방의 출발지 변경
+
+        ResponseEntity response = roomService.changeToLiveMap(roomIdDTO.getRoomId());
+
+        return response;
+    }
 
 
 
