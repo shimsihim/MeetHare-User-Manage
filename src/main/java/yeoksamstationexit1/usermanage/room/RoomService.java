@@ -69,7 +69,7 @@ public class RoomService {
 
     }
 
-    public ResponseEntity<?> findPersonalRoom(UserEntity existUser) {
+    public List<RoomListDTO> findPersonalRoom(UserEntity existUser) {
 
 
             List<ParticipantEntity> participateList = participantRepository.findByIdUserId(existUser.getId());
@@ -81,7 +81,7 @@ public class RoomService {
                         return roomListDTO;
                     })
                     .collect(Collectors.toList());
-            return ResponseEntity.ok(roomList);
+            return roomList;
 
 
     }
@@ -333,7 +333,7 @@ public class RoomService {
             req.put("reserveMembers", memberList.stream()
                     .map(participant -> participant.getUser().getEmail())
                     .collect(Collectors.toList()));
-        try {
+
             ResponseEntity<Void> responseEntity = webClient.post()
                     .uri("/reserve")
                     .bodyValue(req)
@@ -342,21 +342,18 @@ public class RoomService {
                     .block();
 
             return responseEntity != null ? responseEntity : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (NoSuchElementException e) {
-            log.error("setPlace 오류: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+
     }
 
 
-    public ResponseEntity<Void> changeToLiveMap(String roomUUID) {
+    public ResponseEntity<String> changeToLiveMap(String roomUUID) {
 
         RoomEntity room = roomRepository.findByUUID(roomUUID)
                 .orElseThrow(() -> new NoSuchElementException("방을 찾을 수 없음"));
 
         room.setProcessivity(Processivity.LiveMap);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("연결완료");
 
     }
 
