@@ -126,9 +126,9 @@ public class RoomController {
     }
 
     @PostMapping("/setplace") // 해당 방의 fix place
-    public ResponseEntity<Void> setplace(@AuthenticationPrincipal UserEntity user,@RequestBody SetPlaceDTO setPlaceDTO){
+    public ResponseEntity<?> setplace(@AuthenticationPrincipal UserEntity user,@RequestBody SetPlaceDTO setPlaceDTO){
         //개인의 특정 방의 출발지 변경
-        ResponseEntity<Void> response = roomService.setPlace(user,setPlaceDTO);
+        ResponseEntity<?> response = roomService.setPlace(user,setPlaceDTO);
 
         return response;
     }

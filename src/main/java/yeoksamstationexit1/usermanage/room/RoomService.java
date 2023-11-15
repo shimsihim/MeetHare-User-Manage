@@ -9,12 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import yeoksamstationexit1.usermanage.exception.NotInRoomException;
 import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEmbededId;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEntity;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantRepository;
+import yeoksamstationexit1.usermanage.room.roomDTO.ForAlertDTO;
 import yeoksamstationexit1.usermanage.room.roomDTO.request.*;
 import yeoksamstationexit1.usermanage.room.roomDTO.response.RoomListDTO;
 import yeoksamstationexit1.usermanage.user.UserEntity;
@@ -46,7 +48,7 @@ public class RoomService {
     public String registRoom(UserEntity existUser, CreateRoomDTO createRoomDTO) {
 
 
-        RoomEntity room = new RoomEntity(createRoomDTO,existUser.getEmail(),UUID.randomUUID().toString());
+        RoomEntity room = new RoomEntity(createRoomDTO, existUser.getEmail(), UUID.randomUUID().toString());
 
         roomRepository.save(room);
 
@@ -72,16 +74,16 @@ public class RoomService {
     public List<RoomListDTO> findPersonalRoom(UserEntity existUser) {
 
 
-            List<ParticipantEntity> participateList = participantRepository.findByIdUserId(existUser.getId());
-            List<RoomListDTO> roomList = participateList.stream()
-                    .map(participant -> {
-                        RoomListDTO roomListDTO = new RoomListDTO();
-                        roomListDTO.setUUID(participant.getRoom().getUUID());
-                        roomListDTO.setRoomName(participant.getRoomName()); // ParticipantEntity에서 roomName 가져오기
-                        return roomListDTO;
-                    })
-                    .collect(Collectors.toList());
-            return roomList;
+        List<ParticipantEntity> participateList = participantRepository.findByIdUserId(existUser.getId());
+        List<RoomListDTO> roomList = participateList.stream()
+                .map(participant -> {
+                    RoomListDTO roomListDTO = new RoomListDTO();
+                    roomListDTO.setUUID(participant.getRoom().getUUID());
+                    roomListDTO.setRoomName(participant.getRoomName()); // ParticipantEntity에서 roomName 가져오기
+                    return roomListDTO;
+                })
+                .collect(Collectors.toList());
+        return roomList;
 
 
     }
@@ -171,7 +173,6 @@ public class RoomService {
                 .collect(Collectors.toCollection(ArrayList::new));
 
 
-
         List<String> excludedDates = dateList.stream()
                 .filter(date -> !roomTimeList.contains(date))
                 .map(date -> date.toString())
@@ -222,9 +223,9 @@ public class RoomService {
         room.setFixDay(fixDateDTO.getDate());
         room.setProcessivity(Processivity.SubmitStation);
         room.setSubmitNumber(0);
-        List<ParticipantEntity> participantList = participantRepository.findByIdRoomId(fixDateDTO.getRoomId()).orElseThrow(()->new NoSuchElementException());
+        List<ParticipantEntity> participantList = participantRepository.findByIdRoomId(fixDateDTO.getRoomId()).orElseThrow(() -> new NoSuchElementException());
 
-        for(ParticipantEntity c : participantList){
+        for (ParticipantEntity c : participantList) {
             c.setProgress(Processivity.SubmitStation);
         }
 
@@ -294,9 +295,8 @@ public class RoomService {
     public ResponseEntity<Void> changeName(UserEntity user, NameChangeDTO nameChangeDTO) {
 
 
-
         ParticipantEntity participant = participantRepository.findByIdUserIdAndIdUUID(user.getId(), nameChangeDTO.getUuid())
-                .orElseThrow(()-> new NotInRoomException("해당 방에 존재하는 유저를 찾을 수 없습니다"));
+                .orElseThrow(() -> new NotInRoomException("해당 방에 존재하는 유저를 찾을 수 없습니다"));
 
 
         participant.setRoomName(nameChangeDTO.getEditedTitle());
@@ -304,12 +304,11 @@ public class RoomService {
         return ResponseEntity.ok().build();
 
 
-
-
     }
+
     public ResponseEntity<Void> setStation(UserEntity user, SetStationDTO setStationDTO) {
 
-        RoomEntity room = roomRepository.findById(setStationDTO.getRoomId()).orElseThrow(()->new NoSuchElementException());
+        RoomEntity room = roomRepository.findById(setStationDTO.getRoomId()).orElseThrow(() -> new NoSuchElementException());
         room.setFixStation(setStationDTO.getStation());
         room.setProcessivity(Processivity.RecommendPlace);
 
@@ -318,31 +317,41 @@ public class RoomService {
 
     public ResponseEntity<Void> setPlace(UserEntity user, SetPlaceDTO setPlaceDTO) {
 
-            RoomEntity room = roomRepository.findById(setPlaceDTO.getRoomId())
-                    .orElseThrow(() -> new NoSuchElementException("방을 찾을 수 없음"));
+        RoomEntity room = roomRepository.findById(setPlaceDTO.getRoomId())
+                .orElseThrow(() -> new NoSuchElementException("방을 찾을 수 없음"));
 
-            room.setFixPlace(setPlaceDTO.getPlace());
-            room.setProcessivity(Processivity.Fix);
+        room.setFixPlace(setPlaceDTO.getPlace());
+        room.setProcessivity(Processivity.Fix);
 
-            List<ParticipantEntity> memberList = participantRepository.findByIdRoomId(room.getRoomId())
-                    .orElseThrow(() -> new NoSuchElementException("방에 속한 사람이 없음"));
+        List<ParticipantEntity> memberList = participantRepository.findByIdRoomId(room.getRoomId())
+                .orElseThrow(() -> new NoSuchElementException("방에 속한 사람이 없음"));
 
-            Map<String, Object> req = new HashMap<>();
-            req.put("reserveTime", room.getFixDay());
-            req.put("roomCode", room.getUUID());
-            req.put("reserveMembers", memberList.stream()
+        ForAlertDTO req = ForAlertDTO.builder()
+                .roomCode(room.getUUID())
+                .reserveTime(room.getFixDay())
+                .reserveMembers(memberList.stream()
                     .map(participant -> participant.getUser().getEmail())
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList())).build();
 
-            ResponseEntity<Void> responseEntity = webClient.post()
+
+        try {
+            webClient.post()
                     .uri("/reserve")
                     .bodyValue(req)
                     .retrieve()
                     .toBodilessEntity()
                     .block();
 
-            return responseEntity != null ? responseEntity : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-
+            // If the block() operation completes without throwing an exception, it means the request was successful.
+            return ResponseEntity.ok().build();
+        } catch (WebClientResponseException e) {
+            // If the block() operation throws a WebClientResponseException, handle the error status code.
+            HttpStatus status = e.getStatusCode();
+            return ResponseEntity.status(status).build();
+        } catch (Exception e) {
+            // Handle other exceptions (e.g., network issues, timeout)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 
