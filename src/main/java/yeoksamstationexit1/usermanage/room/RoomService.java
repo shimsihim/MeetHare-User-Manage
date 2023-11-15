@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import yeoksamstationexit1.usermanage.exception.NotInRoomException;
 import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
@@ -154,7 +153,7 @@ public class RoomService {
 
     //방 내의 모든 유저의 불가능한 날짜를 가져와서
     //모든 가능힌 날짜 반환
-    public ResponseEntity<Map<String, List<String>>> getAllImpossTime(UserEntity existUser, GetAllTimeInRoomDTO getAllTimeInRoomDTO) {
+    public ResponseEntity<Map<String, List<String>>> getAllpossTime(UserEntity existUser, GetAllTimeInRoomDTO getAllTimeInRoomDTO) {
 
         Optional<List<ParticipantEntity>> userIdListOp = participantRepository.findByIdRoomId(getAllTimeInRoomDTO.getRoomId());
         List<Long> userIdList = userIdListOp.map(participantEntities -> {
@@ -259,29 +258,6 @@ public class RoomService {
         return ResponseEntity.ok("Next");
     }
 
-    public boolean recommendDay(RoomEntity roomEntity, List<ParticipantEntity> participantList) {
-
-
-        List<Long> userIdList = participantList.stream()
-                .map(participant -> participant.getUser().getId())
-                .collect(Collectors.toList());
-
-        List<LocalDate> impossibleDates = fixCalendarRepository.findByUserList(userIdList);
-
-
-        // 가능한 날짜를 찾아내는 방법:
-        List<LocalDate> possibleDates = IntStream.range(0, roomEntity.getPeriodEnd().getDayOfYear() - roomEntity.getPeriodStart().getDayOfYear() + 1)
-                .mapToObj(roomEntity.getPeriodStart()::plusDays)
-                .filter(date -> !impossibleDates.contains(date))
-                .collect(Collectors.toList());
-
-        if (possibleDates.size() == 0) {
-            return false;
-        }
-        roomEntity.setFixDay(possibleDates.get(0));
-
-        return true;
-    }
 
     public Processivity nextProcess(Processivity process, RoomEntity roomEntity, List<ParticipantEntity> participantList) {
 
@@ -340,40 +316,49 @@ public class RoomService {
         return ResponseEntity.ok().build();
     }
 
-    
     public ResponseEntity<Void> setPlace(UserEntity user, SetPlaceDTO setPlaceDTO) {
 
-        RoomEntity room = roomRepository.findById(setPlaceDTO.getRoomId()).orElseThrow(()->new NoSuchElementException());
-        room.setFixPlace(setPlaceDTO.getPlace());
-        room.setProcessivity(Processivity.Fix);
+            RoomEntity room = roomRepository.findById(setPlaceDTO.getRoomId())
+                    .orElseThrow(() -> new NoSuchElementException("방을 찾을 수 없음"));
 
-        List<ParticipantEntity> memberList = participantRepository.findByIdRoomId(room.getRoomId())
-                .orElseThrow(()-> new NoSuchElementException("방에 속한 사람이 없음"));
+            room.setFixPlace(setPlaceDTO.getPlace());
+            room.setProcessivity(Processivity.Fix);
 
-        Map<String,Object> req = new HashMap<>();
-        req.put("fixDate",room.getFixDay());
-        req.put("roomId",room.getRoomId());
-        req.put("memberList",memberList.stream()
-                .map((participant) -> participant.getUser().getEmail())
-                .collect(Collectors.toList()));
+            List<ParticipantEntity> memberList = participantRepository.findByIdRoomId(room.getRoomId())
+                    .orElseThrow(() -> new NoSuchElementException("방에 속한 사람이 없음"));
 
-        Mono<Object> resp = webClient.post()
-                .uri("/reserve")
-                .bodyValue(req)
-                .retrieve()
-                .bodyToMono(Object.class);
+            Map<String, Object> req = new HashMap<>();
+            req.put("fixDate", room.getFixDay());
+            req.put("roomId", room.getRoomId());
+            req.put("memberList", memberList.stream()
+                    .map(participant -> participant.getUser().getEmail())
+                    .collect(Collectors.toList()));
+        try {
+            ResponseEntity<Void> responseEntity = webClient.post()
+                    .uri("/reserve")
+                    .bodyValue(req)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
 
-        resp.map(response -> new ResponseEntity<>(response, HttpStatus.OK))
-                .onErrorResume(e -> {
-                    log.warn("약속확정 보내기 에러");
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                })
-                .block();
-   
-
-        return ResponseEntity.ok().build();
+            return responseEntity != null ? responseEntity : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (NoSuchElementException e) {
+            log.error("setPlace 오류: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
+
+    public ResponseEntity<Void> changeToLiveMap(Long roomId) {
+
+        RoomEntity room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new NoSuchElementException("방을 찾을 수 없음"));
+
+        room.setProcessivity(Processivity.LiveMap);
+
+        return ResponseEntity.ok().build();
+
+    }
 
 
     public class UUIDgeneration {
