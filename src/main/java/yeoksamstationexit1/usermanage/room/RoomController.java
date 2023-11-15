@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import yeoksamstationexit1.usermanage.global.util.ErrorHandler;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
 import yeoksamstationexit1.usermanage.room.roomDTO.request.*;
+import yeoksamstationexit1.usermanage.room.roomDTO.response.RoomListDTO;
 import yeoksamstationexit1.usermanage.user.UserEntity;
 
 import javax.validation.Valid;
@@ -43,10 +44,8 @@ public class RoomController {
     @GetMapping("/findmyroom")
     public ResponseEntity<?> findMyRoom(@AuthenticationPrincipal UserEntity user){
 
-
-
-        ResponseEntity<?> response =  roomService.findPersonalRoom(user);
-        return response;
+        List<RoomListDTO> roomList =  roomService.findPersonalRoom(user);
+        return ResponseEntity.ok(roomList);
     }
 
     //기존 방에 입장한 인원이면 방에 입장한 인원정보와 roomId 반환
