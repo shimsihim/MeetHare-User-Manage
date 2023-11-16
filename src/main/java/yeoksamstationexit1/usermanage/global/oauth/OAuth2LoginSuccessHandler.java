@@ -34,22 +34,20 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
       // User의 Role이 GUEST일 경우 처음 요청한 회원이므로 회원가입 페이지로 리다이렉트
       if (oAuth2User.getRole() == Role.USER) {
 
-        String accessToken = jwtService.createAccessToken(oAuth2User.getEmail());
+        String accessToken = jwtService.createAccessTokenWithNickName(oAuth2User.getEmail(),oAuth2User.getNickName(),oAuth2User.getUserId());
 
-
-        System.out.println(accessToken);
+        
         String referer = request.getHeader("Referer");
 
         if (referer.equals("http://localhost:3000/") ) {
 
           ResponseCookie cookie = ResponseCookie.from("Bearer", accessToken)
                   .path("/")
-                  .secure(true)
-                  .domain("*")
+                  
                   .build();
 
           response.addHeader("Set-Cookie", cookie.toString());
-          response.sendRedirect(referer); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
+          response.sendRedirect("http://localhost:3000"); // 프론트의 회원가입 추가 정보 입력 폼으로 리다이렉트
         }
         else{
 

@@ -41,6 +41,8 @@ public class JwtService {
    */
   private static final String ACCESS_TOKEN_SUBJECT = "AccessToken";
   private static final String REFRESH_TOKEN_SUBJECT = "RefreshToken";
+  private static final String NICKNAME_CLAIM = "nickName";
+  private static final String USERID_CLAIM = "userId";
   private static final String EMAIL_CLAIM = "email";
   private static final String BEARER = "Bearer ";
 
@@ -71,6 +73,21 @@ public class JwtService {
         .withSubject(REFRESH_TOKEN_SUBJECT)
         .withExpiresAt(new Date(now.getTime() + refreshTokenExpirationPeriod))
         .sign(Algorithm.HMAC512(secretKey));
+  }
+
+  public String createAccessTokenWithNickName(String email,String nickName, Long userId) {
+    Date now = new Date();
+    return JWT.create() // JWT 토큰을 생성하는 빌더 반환
+            .withSubject(ACCESS_TOKEN_SUBJECT) // JWT의 Subject 지정
+            .withExpiresAt(new Date(now.getTime() + accessTokenExpirationPeriod)) // 토큰 만료 시간 설정
+
+            // 클레임으로는 저희는 email 하나만 사용
+            // 추가적으로 식별자나, 이름 등의 정보를 더 추가 가능
+            // 추가할 경우 .withClaim(클래임 이름, 클래임 값) 으로 설정
+            .withClaim(EMAIL_CLAIM, email)
+            .withClaim(USERID_CLAIM, userId)
+            .withClaim(NICKNAME_CLAIM, nickName)
+            .sign(Algorithm.HMAC512(secretKey)); // HMAC512 알고리즘 사용
   }
 
   /**
