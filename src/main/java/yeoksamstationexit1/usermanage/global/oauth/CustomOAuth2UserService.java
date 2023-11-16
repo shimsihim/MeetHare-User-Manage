@@ -11,10 +11,12 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import yeoksamstationexit1.usermanage.exception.WebClientUserInfoSendException;
 import yeoksamstationexit1.usermanage.user.SocialType;
 import yeoksamstationexit1.usermanage.user.UserEntity;
 import yeoksamstationexit1.usermanage.user.UserRepository;
@@ -94,7 +96,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
      * SocialType과 attributes에 들어있는 소셜 로그인의 식별값 id를 통해 회원을 찾아 반환하는 메소드
      * 만약 찾은 회원이 있다면, 그대로 반환하고 없다면 saveUser()를 호출하여 회원을 저장
      */
-    private UserEntity getUser(OAuthAttributes attributes, SocialType socialType) {
+    @Transactional
+    public UserEntity getUser(OAuthAttributes attributes, SocialType socialType) {
         UserEntity findUser = userRepository.findBySocialTypeAndSocialId(socialType,
                 attributes.getOauth2UserInfo().getId()).orElse(null);
 
@@ -105,18 +108,28 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             UserEntity saveUserEntity = saveUser(attributes, socialType);
             String json = String.format("{\"user_id\": %d}", saveUserEntity.getId());
 
-            Mono<ClientResponse> responseMono = webClient.post()
+            webClient.post()
                     .uri("/place/priority")
                     .bodyValue(json)
-                    .exchange(); // exchange 메서드를 사용하여 ClientResponse 객체를 얻음
+                    .exchange()
+                    .subscribe(
+                            response -> {
+                                int statusCode = response.statusCode().value();
+                                if (statusCode >= 200 && statusCode < 300) {
+                                } else {
+                                    log.warn("Regist user To Place SERVICE Error: " + statusCode);
+                                    throw new WebClientUserInfoSendException("유저아이디 전달 에러");
+                                }
+                            },
+                            error -> {
+                                log.warn("Error during request: " + error.getMessage());
+                                throw new WebClientUserInfoSendException(error.getMessage());
+                            }
+                    );
 
-            responseMono.subscribe(response -> {
-                HttpStatus statusCode = response.statusCode();
-                Mono<String> responseBodyMono = response.bodyToMono(String.class);
-                responseBodyMono.subscribe(responseBody -> {
-                    log.info("Response Body: " + responseBody +" statusCode : "+ statusCode);
-                });
-            });
+
+
+
             return saveUserEntity;
         }
         return findUser;

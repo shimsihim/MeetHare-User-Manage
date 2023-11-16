@@ -8,8 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 import yeoksamstationexit1.usermanage.exception.NotInRoomException;
 import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
@@ -315,13 +317,9 @@ public class RoomService {
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<Void> setPlace(UserEntity user, SetPlaceDTO setPlaceDTO) {
-
+    public ResponseEntity<String> setPlace(UserEntity user, SetPlaceDTO setPlaceDTO) {
         RoomEntity room = roomRepository.findById(setPlaceDTO.getRoomId())
                 .orElseThrow(() -> new NoSuchElementException("방을 찾을 수 없음"));
-
-        room.setFixPlace(setPlaceDTO.getPlace());
-        room.setProcessivity(Processivity.Fix);
 
         List<ParticipantEntity> memberList = participantRepository.findByIdRoomId(room.getRoomId())
                 .orElseThrow(() -> new NoSuchElementException("방에 속한 사람이 없음"));
@@ -330,27 +328,31 @@ public class RoomService {
                 .roomCode(room.getUUID())
                 .reserveTime(room.getFixDay())
                 .reserveMembers(memberList.stream()
-                    .map(participant -> participant.getUser().getEmail())
-                    .collect(Collectors.toList())).build();
+                        .map(participant -> participant.getUser().getEmail())
+                        .collect(Collectors.toList())).build();
 
-
+        // exchange() 메서드를 사용하여 ClientResponse를 직접 처리
         try {
-            webClient.post()
+            ClientResponse clientResponse = webClient.post()
                     .uri("/reserve")
                     .bodyValue(req)
-                    .retrieve()
-                    .toBodilessEntity()
+                    .exchange()
                     .block();
 
-            // If the block() operation completes without throwing an exception, it means the request was successful.
-            return ResponseEntity.ok().build();
-        } catch (WebClientResponseException e) {
-            log.error("WebClient : /reserve 알림 service 요청 실패 ");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (Exception e) {
-            // Handle other exceptions (e.g., network issues, timeout)
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            // ClientResponse를 ResponseEntity로 변환
+            ResponseEntity<String> res = ResponseEntity.status(clientResponse.rawStatusCode())
+                    .headers(headers -> headers.putAll(clientResponse.headers().asHttpHeaders()))
+                    .body(clientResponse.bodyToMono(String.class).block());
+
+            room.setFixPlace(setPlaceDTO.getPlace());
+            room.setProcessivity(Processivity.Fix);
+
+            return res;
+
+        }catch(Exception e){
+            log.warn(e.toString());
         }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
 
