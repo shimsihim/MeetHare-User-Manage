@@ -10,8 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
+
 import yeoksamstationexit1.usermanage.exception.NotInRoomException;
 import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
 import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
@@ -30,8 +29,7 @@ import yeoksamstationexit1.usermanage.user.repository.FixCalendarRepository;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+
 
 @Slf4j
 @Service
@@ -144,6 +142,9 @@ public class RoomService {
             RoomEntity roomEntity = roomRepository.findById(dayList.getRoomId()).get();
             participantEntity.setProgress(Processivity.RecommendDay);
             roomEntity.setSubmitNumber(roomEntity.getSubmitNumber() + 1);
+            if(roomEntity.getNumber()==roomEntity.getSubmitNumber()){
+                roomEntity.setProcessivity(Processivity.RecommendDay);
+            }
         }
 
         /**
@@ -187,17 +188,39 @@ public class RoomService {
         return ResponseEntity.ok(response);
     }
 
+    public ResponseEntity<Void> rollback( GetAllTimeInRoomDTO getAllTimeInRoomDTO) {
+
+        RoomEntity room = roomRepository.findById(getAllTimeInRoomDTO
+                .getRoomId())
+                .orElseThrow(()->new NotInRoomException("rollback서비스에서 방 정보 찾을 수 없음"));
+
+        List<ParticipantEntity> members = participantRepository
+                .findByIdRoomId(getAllTimeInRoomDTO.getRoomId())
+                .orElseThrow(()->new NotInRoomException("rollback함수에서 참여자 정보 찾을 수 없음"));
+
+        room.setProcessivity(Processivity.InSubmission);
+        room.setSubmitNumber(0);
+        room.setPeriodStart(getAllTimeInRoomDTO.getPeriodStart());
+        room.setPeriodEnd(getAllTimeInRoomDTO.getPeriodEnd());
+        for(ParticipantEntity participant : members){
+            participant.setProgress(Processivity.InSubmission);
+        }
+
+        return ResponseEntity.ok().build();
+
+    }
 
     //나의 방에서의 출발지 수정을 했으므로 나의 진행도와 방의 제출자 +1
     //변변경은 확인했음
     public ResponseEntity<String> changeLocalStartPoint(UserEntity existUser, ChangeLocalStartRequestDTO changeLocalStartRequestDTO) {
 
 
-        ParticipantEmbededId id = new ParticipantEmbededId(existUser.getId(), changeLocalStartRequestDTO.getRoomId());
-
         RoomEntity roomEntity = roomRepository.findById(changeLocalStartRequestDTO.getRoomId()).orElseThrow(() -> new NoSuchElementException("존재하지 않는 방"));
         // 여기서 방의 유저가 아니면 빠꾸 시켜야 함
-        ParticipantEntity participant = participantRepository.findById(id).orElseThrow(() -> new NoSuchElementException("방에 없는 사람"));
+        ParticipantEntity participant = participantRepository
+                .findById(new ParticipantEmbededId(existUser.getId(), changeLocalStartRequestDTO.getRoomId()))
+                .orElseThrow(() -> new NoSuchElementException("방에 없는 사람"));
+
         participant.setPoint(changeLocalStartRequestDTO.getStartPoint());
         participant.setLatitude(changeLocalStartRequestDTO.getLatitude());
         participant.setLongitude(changeLocalStartRequestDTO.getLongitude());
@@ -206,12 +229,14 @@ public class RoomService {
         if (participant.getProgress() != Processivity.RecommendStation) {
             participant.setProgress(Processivity.RecommendStation);
             roomEntity.setSubmitNumber(roomEntity.getSubmitNumber() + 1);
-        }
-        if (roomEntity.getNumber() == roomEntity.getSubmitNumber()) {
-            roomEntity.setProcessivity(Processivity.RecommendStation);
+            if (roomEntity.getNumber() == roomEntity.getSubmitNumber()) {
 
-            //여기서 새로고침을 하기 위해 다른 값을 리턴해줘야 하나?
+                roomEntity.setProcessivity(Processivity.RecommendStation);
+
+                //여기서 새로고침을 하기 위해 다른 값을 리턴해줘야 하나?
+            }
         }
+
 
         return ResponseEntity.ok("해당 약속의 출발지 설정");
     }
