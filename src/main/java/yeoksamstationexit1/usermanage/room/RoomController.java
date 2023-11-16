@@ -68,7 +68,7 @@ public class RoomController {
         return response;
     }
 
-    @PostMapping("/getallroomtime") // 본인 불가능한 날짜 제출
+    @PostMapping("/getallroomtime") // 방 내 가능한 날짜 리스트
     public ResponseEntity<Map<String,List<String>>> getAllRoomTime(@AuthenticationPrincipal UserEntity user,@RequestBody GetAllTimeInRoomDTO getAllTimeInRoomDTO){
         //개인의 특정 방의 출발지 변경
 
@@ -76,6 +76,15 @@ public class RoomController {
         ResponseEntity<Map<String, List<String>>> response = roomService.getAllpossTime(user,getAllTimeInRoomDTO);
 
         return response;
+    }
+
+    @PostMapping("/rollback") // 가능한 시간 없을 시 방 정보 업데이트 및 유저 정보 업데이트
+    public ResponseEntity<Void> restoreProcessToGetDay(@AuthenticationPrincipal UserEntity user,@RequestBody GetAllTimeInRoomDTO getAllTimeInRoomDTO){
+        //개인의 특정 방의 출발지 변경
+
+        ResponseEntity<Void> res = roomService.rollback(getAllTimeInRoomDTO);
+
+        return res;
     }
 
 
