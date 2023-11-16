@@ -345,9 +345,8 @@ public class RoomService {
             // If the block() operation completes without throwing an exception, it means the request was successful.
             return ResponseEntity.ok().build();
         } catch (WebClientResponseException e) {
-            // If the block() operation throws a WebClientResponseException, handle the error status code.
-            HttpStatus status = e.getStatusCode();
-            return ResponseEntity.status(status).build();
+            log.error("WebClient : /reserve 알림 service 요청 실패 ");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (Exception e) {
             // Handle other exceptions (e.g., network issues, timeout)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
