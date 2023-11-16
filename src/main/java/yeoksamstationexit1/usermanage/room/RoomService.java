@@ -269,17 +269,8 @@ public class RoomService {
          */
         Processivity next = process;
 
-        if (process == Processivity.InSubmission) {
+        if (process == Processivity.InSubmission) 
             next = Processivity.RecommendDay;
-        } else if (process == Processivity.RecommendDay) {
-            next = Processivity.SubmitStation;
-        } else if (process == Processivity.SubmitStation) {
-            next = Processivity.RecommendStation;
-        } else if (process == Processivity.RecommendStation) {
-            next = Processivity.RecommendPlace;
-        } else if (process == Processivity.RecommendPlace) {
-            next = Processivity.Fix;
-        }
 
 
         return next;
