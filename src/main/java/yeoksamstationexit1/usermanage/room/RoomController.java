@@ -63,8 +63,6 @@ public class RoomController {
     @PostMapping("/submittime") // 본인 불가능한 날짜 제출
     public ResponseEntity<Void> submitMyImpossibleTime(@AuthenticationPrincipal UserEntity user, @RequestBody addDeleteDayListDTO dayList){
         //개인의 특정 방의 출발지 변경
-        System.out.println(dayList.getAddDayList().toString());
-        System.out.println(dayList.getDeleteDayList().toString());
         ResponseEntity<Void> response = roomService.updateMyImpossibleTime(user, dayList);
 
         return response;
@@ -93,7 +91,7 @@ public class RoomController {
     @PostMapping("sendFixDate")
     public ResponseEntity<Void> sendFixDate(@AuthenticationPrincipal UserEntity user,@RequestBody @Valid FixDateDTO fixDate){
         //개인의 불가능한 시간 수정
-        ResponseEntity<Void> response = roomService.saveFixDate(fixDate);
+        ResponseEntity<Void> response = roomService.saveFixDate(user,fixDate);
 
         return response;
     }
@@ -114,7 +112,7 @@ public class RoomController {
     @PostMapping("/nextforce") // 해당 약속의 강제 다음
     public ResponseEntity<?> nextForce(@AuthenticationPrincipal UserEntity user,@RequestBody RoomIdDTO roomIdDTO){
         //개인의 특정 방의 출발지 변경
-        ResponseEntity<?> response = roomService.nextClick(roomIdDTO.getRoomId());
+        ResponseEntity<?> response = roomService.nextClick(user,roomIdDTO.getRoomId());
 
         return response;
     }

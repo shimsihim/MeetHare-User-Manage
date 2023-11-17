@@ -41,7 +41,6 @@ public class RoomGetInService {
     //일단 방의 진행도를 보고 insubmission상태가 아니면 다시 보내기
     public ResponseEntity<?> getIn(UserEntity existUser, String uuid) {
 
-        System.out.println("uuid" + "  " + uuid);
         /** To do
          * 조인을 통해서 repository의 접근 줄이기
          * InSubmissiondl 이 아니면 굳이 나눌 필요 없이 일단 다 보내주고
@@ -59,10 +58,13 @@ public class RoomGetInService {
         }
         //방 없으면 nocontent
         else{
-            System.out.println("왜없니");
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
 
+
+        //여기부터 입장
+
+        
         //진행도
         Processivity roomProgressity = roomEntity.getProcessivity();
         
@@ -121,8 +123,6 @@ public class RoomGetInService {
             }
 
             List<String> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId(),roomEntity.getPeriodStart(),roomEntity.getPeriodEnd());
-            System.out.println("나의 불가능한 시간 ");
-            System.out.println(myImpossibleList.toString());
 
             Map<String, Object> response = new HashMap<>();
             response.put("userId",existUser.getId());
