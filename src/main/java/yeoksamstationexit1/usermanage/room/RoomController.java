@@ -63,6 +63,8 @@ public class RoomController {
     @PostMapping("/submittime") // 본인 불가능한 날짜 제출
     public ResponseEntity<Void> submitMyImpossibleTime(@AuthenticationPrincipal UserEntity user, @RequestBody addDeleteDayListDTO dayList){
         //개인의 특정 방의 출발지 변경
+        System.out.println(dayList.getAddDayList().toString());
+        System.out.println(dayList.getDeleteDayList().toString());
         ResponseEntity<Void> response = roomService.updateMyImpossibleTime(user, dayList);
 
         return response;

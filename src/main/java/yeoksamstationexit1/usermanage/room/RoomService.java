@@ -170,16 +170,24 @@ public class RoomService {
 
         List<LocalDate> roomTimeList = fixCalendarRepository.findByUserListAndDateRange(userIdList, getAllTimeInRoomDTO.getPeriodStart(), getAllTimeInRoomDTO.getPeriodEnd());
 
+        System.out.println("불가능한 날짜");
+        System.out.println(roomTimeList.toString());
 
         List<LocalDate> dateList = getAllTimeInRoomDTO.getPeriodStart()
                 .datesUntil(getAllTimeInRoomDTO.getPeriodEnd().plusDays(1))
                 .collect(Collectors.toCollection(ArrayList::new));
 
+        System.out.println("전체날짜");
+        System.out.println(dateList.toString());
 
         List<String> excludedDates = dateList.stream()
                 .filter(date -> !roomTimeList.contains(date))
                 .map(date -> date.toString())
                 .collect(Collectors.toList());
+        /////
+        System.out.println("가능한 날짜");
+        System.out.println(excludedDates.toString());
+        /////
 
 
         Map<String, List<String>> response = new HashMap<>();
