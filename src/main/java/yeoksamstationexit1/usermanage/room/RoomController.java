@@ -59,7 +59,7 @@ public class RoomController {
 
         return status;
     }
-
+ 
     @PostMapping("/submittime") // 본인 불가능한 날짜 제출
     public ResponseEntity<Void> submitMyImpossibleTime(@AuthenticationPrincipal UserEntity user, @RequestBody addDeleteDayListDTO dayList){
         //개인의 특정 방의 출발지 변경
