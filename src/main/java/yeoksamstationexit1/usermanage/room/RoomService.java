@@ -142,9 +142,7 @@ public class RoomService {
             RoomEntity roomEntity = roomRepository.findById(dayList.getRoomId()).get();
             participantEntity.setProgress(Processivity.RecommendDay);
             roomEntity.setSubmitNumber(roomEntity.getSubmitNumber() + 1);
-            if(roomEntity.getNumber()==roomEntity.getSubmitNumber()){
-                roomEntity.setProcessivity(Processivity.RecommendDay);
-            }
+
         }
 
         /**
