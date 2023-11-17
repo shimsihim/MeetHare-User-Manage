@@ -121,6 +121,8 @@ public class RoomGetInService {
             }
 
             List<String> myImpossibleList = getUserImpossibleTimeAndDeletePastDay(existUser.getId(),roomEntity.getPeriodStart(),roomEntity.getPeriodEnd());
+            System.out.println("나의 불가능한 시간 ");
+            System.out.println(myImpossibleList.toString());
 
             Map<String, Object> response = new HashMap<>();
             response.put("userId",existUser.getId());
