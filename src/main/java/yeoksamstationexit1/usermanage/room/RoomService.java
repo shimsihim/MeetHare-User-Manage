@@ -227,7 +227,7 @@ public class RoomService {
         if (participant.getProgress() != Processivity.RecommendStation) {
             participant.setProgress(Processivity.RecommendStation);
             roomEntity.setSubmitNumber(roomEntity.getSubmitNumber() + 1);
-            if (roomEntity.getNumber() == roomEntity.getSubmitNumber()) {
+            if (roomEntity.getNumber() <= roomEntity.getSubmitNumber()) {
 
                 roomEntity.setProcessivity(Processivity.RecommendStation);
 
@@ -349,6 +349,9 @@ public class RoomService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        room.setFixPlace(setPlaceDTO.getPlace());
+        room.setProcessivity(Processivity.Fix);
+
         ForAlertDTO req = ForAlertDTO.builder()
                 .roomCode(room.getUUID())
                 .reserveTime(room.getFixDay())
@@ -369,8 +372,7 @@ public class RoomService {
                     .headers(headers -> headers.putAll(clientResponse.headers().asHttpHeaders()))
                     .body(clientResponse.bodyToMono(String.class).block());
 
-            room.setFixPlace(setPlaceDTO.getPlace());
-            room.setProcessivity(Processivity.Fix);
+
 
             return res;
 
