@@ -10,16 +10,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import yeoksamstationexit1.usermanage.exception.NotInRoomException;
 import yeoksamstationexit1.usermanage.room.enumClass.Processivity;
-import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEmbededId;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantEntity;
 import yeoksamstationexit1.usermanage.room.participant.ParticipantRepository;
+import yeoksamstationexit1.usermanage.room.participant.dto.ChangeLocalStartRequestDTO;
 import yeoksamstationexit1.usermanage.room.roomDTO.ForAlertDTO;
 import yeoksamstationexit1.usermanage.room.roomDTO.request.*;
 import yeoksamstationexit1.usermanage.room.roomDTO.response.RoomListDTO;
+import yeoksamstationexit1.usermanage.sse.SSEController;
 import yeoksamstationexit1.usermanage.user.UserEntity;
 import yeoksamstationexit1.usermanage.user.UserRepository;
 import yeoksamstationexit1.usermanage.user.entity.FixCalendarEntity;
@@ -42,6 +42,7 @@ public class RoomService {
     private final FixCalendarRepository fixCalendarRepository;
     private final ObjectMapper objectMapper;
     private final WebClient webClient;
+    private final SSEController sseController;
 
 
     //방 등록
@@ -228,10 +229,11 @@ public class RoomService {
             participant.setProgress(Processivity.RecommendStation);
             roomEntity.setSubmitNumber(roomEntity.getSubmitNumber() + 1);
             if (roomEntity.getNumber() <= roomEntity.getSubmitNumber()) {
-
                 roomEntity.setProcessivity(Processivity.RecommendStation);
+                sseController.sendRefreshEventToRoom(roomEntity.getRoomId());
+                //여기서 새로고침을 하기 위해 다른 값을 리턴해줘야 하나
+                sseController.sendRefreshEventToRoom(roomEntity.getRoomId());
 
-                //여기서 새로고침을 하기 위해 다른 값을 리턴해줘야 하나?
             }
         }
 
